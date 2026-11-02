@@ -1,0 +1,252 @@
+[
+  {
+    "id": "base1-15",
+    "name": "Venusaur",
+    "supertype": "Pokémon",
+    "types": [
+      "Grass"
+    ],
+    "number": "15",
+    "rarity": "Rare Holo",
+    "set": {
+      "id": "base1",
+      "name": "Base",
+      "series": "Base",
+      "releaseDate": "1999/01/09"
+    },
+    "images": {
+      "small": "https://images.pokemontcg.io/base1/15.png",
+      "large": "https://images.pokemontcg.io/base1/15_hires.png"
+    },
+    "marketPrice": 168.18
+  },
+  {
+    "id": "base1-2",
+    "name": "Blastoise",
+    "supertype": "Pokémon",
+    "types": [
+      "Water"
+    ],
+    "number": "2",
+    "rarity": "Rare Holo",
+    "set": {
+      "id": "base1",
+      "name": "Base",
+      "series": "Base",
+      "releaseDate": "1999/01/09"
+    },
+    "images": {
+      "small": "https://images.pokemontcg.io/base1/2.png",
+      "large": "https://images.pokemontcg.io/base1/2_hires.png"
+    },
+    "marketPrice": 226.58
+  },
+  {
+    "id": "base1-4",
+    "name": "Charizard",
+    "supertype": "Pokémon",
+    "types": [
+      "Fire"
+    ],
+    "number": "4",
+    "rarity": "Rare Holo",
+    "set": {
+      "id": "base1",
+      "name": "Base",
+      "series": "Base",
+      "releaseDate": "1999/01/09"
+    },
+    "images": {
+      "small": "https://images.pokemontcg.io/base1/4.png",
+      "large": "https://images.pokemontcg.io/base1/4_hires.png"
+    },
+    "marketPrice": 954.65
+  },
+  {
+    "id": "base1-58",
+    "name": "Pikachu",
+    "supertype": "Pokémon",
+    "types": [
+      "Lightning"
+    ],
+    "number": "58",
+    "rarity": "Common",
+    "set": {
+      "id": "base1",
+      "name": "Base",
+      "series": "Base",
+      "releaseDate": "1999/01/09"
+    },
+    "images": {
+      "small": "https://images.pokemontcg.io/base1/58.png",
+      "large": "https://images.pokemontcg.io/base1/58_hires.png"
+    },
+    "marketPrice": 10.56
+  },
+  {
+    "id": "base2-1",
+    "name": "Clefable",
+    "supertype": "Pokémon",
+    "types": [
+      "Colorless"
+    ],
+    "number": "1",
+    "rarity": "Rare Holo",
+    "set": {
+      "id": "base2",
+      "name": "Jungle",
+      "series": "Base",
+      "releaseDate": "1999/06/16"
+    },
+    "images": {
+      "small": "https://images.pokemontcg.io/base2/1.png",
+      "large": "https://images.pokemontcg.io/base2/1_hires.png"
+    },
+    "marketPrice": 119.1
+  },
+  {
+    "id": "neo1-9",
+    "name": "Lugia",
+    "supertype": "Pokémon",
+    "types": [
+      "Colorless"
+    ],
+    "number": "9",
+    "rarity": "Rare Holo",
+    "set": {
+      "id": "neo1",
+      "name": "Neo Genesis",
+      "series": "Neo",
+      "releaseDate": "2000/12/16"
+    },
+    "images": {
+      "small": "https://images.pokemontcg.io/neo1/9.png",
+      "large": "https://images.pokemontcg.io/neo1/9_hires.png"
+    },
+    "marketPrice": 1300.0
+  },
+  {
+    "id": "sm115-60",
+    "name": "Lt. Surge's Strategy",
+    "supertype": "Trainer",
+    "types": [],
+    "number": "60",
+    "rarity": "Uncommon",
+    "set": {
+      "id": "sm115",
+      "name": "Hidden Fates",
+      "series": "Sun & Moon",
+      "releaseDate": "2019/08/23"
+    },
+    "images": {
+      "small": "https://images.pokemontcg.io/sm115/60.png",
+      "large": "https://images.pokemontcg.io/sm115/60_hires.png"
+    },
+    "marketPrice": 0.38
+  },
+  {
+    "id": "sv3pt5-199",
+    "name": "Charizard ex",
+    "supertype": "Pokémon",
+    "types": [
+      "Fire"
+    ],
+    "number": "199",
+    "rarity": "Special Illustration Rare",
+    "set": {
+      "id": "sv3pt5",
+      "name": "151",
+      "series": "Scarlet & Violet",
+      "releaseDate": "2023/09/22"
+    },
+    "images": {
+      "small": "https://images.pokemontcg.io/sv3pt5/199.png",
+      "large": "https://images.pokemontcg.io/sv3pt5/199_hires.png"
+    },
+    "marketPrice": 323.37
+  },
+  {
+    "id": "sv4pt5-232",
+    "name": "Mew ex",
+    "supertype": "Pokémon",
+    "types": [
+      "Psychic"
+    ],
+    "number": "232",
+    "rarity": "Special Illustration Rare",
+    "set": {
+      "id": "sv4pt5",
+      "name": "Paldean Fates",
+      "series": "Scarlet & Violet",
+      "releaseDate": "2024/01/26"
+    },
+    "images": {
+      "small": "https://images.pokemontcg.io/sv4pt5/232.png",
+      "large": "https://images.pokemontcg.io/sv4pt5/232_hires.png"
+    },
+    "marketPrice": 863.75
+  },
+  {
+    "id": "swsh12pt5-160",
+    "name": "Pikachu",
+    "supertype": "Pokémon",
+    "types": [
+      "Lightning"
+    ],
+    "number": "160",
+    "rarity": "Rare Secret",
+    "set": {
+      "id": "swsh12pt5",
+      "name": "Crown Zenith",
+      "series": "Sword & Shield",
+      "releaseDate": "2023/01/20"
+    },
+    "images": {
+      "small": "https://images.pokemontcg.io/swsh12pt5/160.png",
+      "large": "https://images.pokemontcg.io/swsh12pt5/160_hires.png"
+    },
+    "marketPrice": 39.57
+  },
+  {
+    "id": "swsh7-215",
+    "name": "Umbreon VMAX",
+    "supertype": "Pokémon",
+    "types": [
+      "Darkness"
+    ],
+    "number": "215",
+    "rarity": "Rare Rainbow",
+    "set": {
+      "id": "swsh7",
+      "name": "Evolving Skies",
+      "series": "Sword & Shield",
+      "releaseDate": "2021/08/27"
+    },
+    "images": {
+      "small": "https://images.pokemontcg.io/swsh7/215.png",
+      "large": "https://images.pokemontcg.io/swsh7/215_hires.png"
+    },
+    "marketPrice": 2264.7
+  },
+  {
+    "id": "xy12-11",
+    "name": "Charizard",
+    "supertype": "Pokémon",
+    "types": [
+      "Fire"
+    ],
+    "number": "11",
+    "rarity": "Rare Holo",
+    "set": {
+      "id": "xy12",
+      "name": "Evolutions",
+      "series": "XY",
+      "releaseDate": "2016/11/02"
+    },
+    "images": {
+      "small": "https://images.pokemontcg.io/xy12/11.png",
+      "large": "https://images.pokemontcg.io/xy12/11_hires.png"
+    },
+    "marketPrice": 98.62
+  }
+]
