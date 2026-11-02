@@ -11,6 +11,7 @@ const NAV = [
   { href: "/", label: "Marketplace" },
   { href: "/inventory", label: "My cards" },
   { href: "/offers", label: "Offers" },
+  { href: "/dashboard", label: "Dashboard" },
 ];
 
 function useWaitingOnMe() {
