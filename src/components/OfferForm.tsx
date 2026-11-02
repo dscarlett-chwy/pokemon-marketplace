@@ -68,7 +68,7 @@ export function OfferForm({
         <fieldset>
           <legend className="font-semibold">{pickerLabel}</legend>
           {tradeable.length === 0 ? (
-            <p className="mt-1 text-ink-soft">No cards available to trade. Cards that are listed for sale can't be traded.</p>
+            <p className="mt-1 text-ink-soft">No cards available to trade. Cards that are listed for sale can&apos;t be traded.</p>
           ) : (
             <ul className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-4">
               {tradeable.map((item) => {
