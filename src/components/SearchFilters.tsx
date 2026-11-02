@@ -1,15 +1,27 @@
 "use client";
 
+import { METHOD_LABELS } from "@/lib/exchange";
+import { EXCHANGE_METHODS, type ExchangeMethod } from "@/lib/types";
+
 export type Filters = {
   query: string;
   type: string;
   rarity: string;
   maxPrice: string;
+  handover: ExchangeMethod | "";
   tradesOnly: boolean;
   sort: "newest" | "price-asc" | "price-desc";
 };
 
-export const EMPTY_FILTERS: Filters = { query: "", type: "", rarity: "", maxPrice: "", tradesOnly: false, sort: "newest" };
+export const EMPTY_FILTERS: Filters = {
+  query: "",
+  type: "",
+  rarity: "",
+  maxPrice: "",
+  handover: "",
+  tradesOnly: false,
+  sort: "newest",
+};
 
 const field = "w-full rounded-md border border-rule bg-white px-3 py-2 text-base text-ink";
 
@@ -38,7 +50,7 @@ export function SearchFilters({
           className="w-full rounded-lg border-2 border-cardback bg-white px-4 py-3 text-lg text-ink placeholder:text-ink-soft/70"
         />
       </label>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <label className="block text-sm font-semibold">
           Type
           <select value={filters.type} onChange={(e) => update("type", e.target.value)} className={`${field} mt-1`}>
@@ -70,6 +82,21 @@ export function SearchFilters({
           />
         </label>
         <label className="block text-sm font-semibold">
+          Handover
+          <select
+            value={filters.handover}
+            onChange={(e) => update("handover", e.target.value as Filters["handover"])}
+            className={`${field} mt-1`}
+          >
+            <option value="">Any handover</option>
+            {EXCHANGE_METHODS.map((m) => (
+              <option key={m} value={m}>
+                {METHOD_LABELS[m]}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="block text-sm font-semibold">
           Sort by
           <select
             value={filters.sort}
@@ -81,7 +108,7 @@ export function SearchFilters({
             <option value="price-desc">Price, high to low</option>
           </select>
         </label>
-        <label className="col-span-2 flex items-center gap-2 self-end pb-2 text-base sm:col-span-1">
+        <label className="flex items-center gap-2 self-end pb-2 text-base">
           <input
             type="checkbox"
             checked={filters.tradesOnly}

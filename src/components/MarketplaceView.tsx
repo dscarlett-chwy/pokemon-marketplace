@@ -29,6 +29,7 @@ export function MarketplaceView() {
         (!filters.type || card.types.includes(filters.type)) &&
         (!filters.rarity || card.rarity === filters.rarity) &&
         listing.askingPrice <= max &&
+        (!filters.handover || listing.exchangeMethods.includes(filters.handover)) &&
         (!filters.tradesOnly || listing.openToTrades),
     );
     return found.sort((a, b) => {
