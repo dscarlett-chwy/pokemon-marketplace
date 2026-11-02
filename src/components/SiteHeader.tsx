@@ -33,7 +33,7 @@ function NavLinks({ active }: { active: string | null }) {
             <Link
               href={href}
               aria-current={current ? "page" : undefined}
-              className={`flex items-center gap-2 rounded-md px-3 py-2 text-base font-semibold ${
+              className={`flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-2 text-base font-semibold ${
                 current ? "bg-white/15 text-frame" : "text-white/85 hover:bg-white/10 hover:text-white"
               }`}
             >
