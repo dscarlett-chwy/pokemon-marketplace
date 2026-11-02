@@ -43,7 +43,10 @@ export type Party = "buyer" | "seller";
 /** For pickup and drop-off, `meetup` is the proposed spot and time. */
 export type Exchange = { method: "pickup" | "dropoff"; meetup: string } | { method: "ship"; paidBy: Party };
 
-export type OfferTerms = { cash: number; itemIds: string[]; exchange: Exchange };
+/** What one side adds. The seller always gives the listed card, so `itemIds` holds only extra cards. */
+export type Side = { cash: number; itemIds: string[] };
+
+export type OfferTerms = { buyer: Side; seller: Side; exchange: Exchange };
 
 export type OfferRound = { by: Party; terms: OfferTerms; message: string; at: string };
 

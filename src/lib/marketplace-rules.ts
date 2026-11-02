@@ -10,6 +10,7 @@ import {
   type OfferTerms,
   type Party,
   type Result,
+  type Side,
 } from "./types";
 
 /**
@@ -38,22 +39,38 @@ export function partyOf(offer: Offer, userId: string): Party | null {
   return null;
 }
 
+/** Cards either side adds on top of the listed card. */
+export const offeredItemIds = (terms: OfferTerms) => [...terms.buyer.itemIds, ...terms.seller.itemIds];
+
+export const tradedItemIds = (listing: Listing, terms: OfferTerms) => [listing.itemId, ...offeredItemIds(terms)];
+
 export function activeListingForItem(listings: Record<string, Listing>, itemId: string) {
   return Object.values(listings).find((l) => l.itemId === itemId && l.status === "active");
 }
 
-/** Cards the buyer could put into an offer: owned and not up for sale. */
+/** Cards a collector could put into an offer: owned and not up for sale. */
 export function tradeableItems(data: Pick<MarketData, "items" | "listings">, userId: string) {
   return Object.values(data.items).filter(
     (i) => i.ownerId === userId && !activeListingForItem(data.listings, i.id),
   );
 }
 
+function checkSide(m: MarketData, userId: string, side: Side): string | null {
+  const tradeable = new Set(tradeableItems(m, userId).map((i) => i.id));
+  const missing = side.itemIds.find((id) => !tradeable.has(id));
+  if (!missing) return null;
+  const card = m.cards[m.items[missing]?.cardId];
+  return `${card?.name ?? "A card"} is no longer available to trade.`;
+}
+
 function checkTerms(m: MarketData, listing: Listing, buyerId: string, terms: OfferTerms): string | null {
-  if (!Number.isFinite(terms.cash) || terms.cash < 0) return "Cash must be zero or more.";
-  if (terms.cash === 0 && terms.itemIds.length === 0) return "Add cash, cards, or both to the offer.";
-  if (terms.itemIds.length > 0 && !listing.openToTrades) return "This seller only takes cash for this card.";
-  const { exchange } = terms;
+  const { buyer, seller, exchange } = terms;
+  if (![buyer.cash, seller.cash].every((c) => Number.isFinite(c) && c >= 0)) return "Cash must be zero or more.";
+  if (buyer.cash === 0 && buyer.itemIds.length === 0) return "The buyer has to give cash, cards, or both.";
+  if (buyer.cash > 0 && seller.cash > 0) return "Only one side can add cash. Lower the other side's cash to $0.";
+  if (!listing.openToTrades && buyer.itemIds.length + seller.itemIds.length > 0) {
+    return "This seller only takes cash for this card.";
+  }
   if (!listing.exchangeMethods.includes(exchange.method)) {
     const allowed = listing.exchangeMethods.map((x) => METHOD_LABELS[x].toLowerCase()).join(" or ");
     return `${METHOD_LABELS[exchange.method]} isn't an option for this card. Choose ${allowed}.`;
@@ -64,18 +81,17 @@ function checkTerms(m: MarketData, listing: Listing, buyerId: string, terms: Off
   if (exchange.method !== "ship" && exchange.meetup.length > MAX_MEETUP) {
     return `Keep the meetup details under ${MAX_MEETUP} characters.`;
   }
-  const tradeable = new Set(tradeableItems(m, buyerId).map((i) => i.id));
-  const missing = terms.itemIds.find((id) => !tradeable.has(id));
-  if (missing) {
-    const card = m.cards[m.items[missing]?.cardId];
-    return `${card?.name ?? "A card"} is no longer available to trade.`;
-  }
-  return null;
+  return checkSide(m, buyerId, buyer) ?? checkSide(m, listing.sellerId, seller);
 }
 
-const cleanTerms = ({ cash, itemIds, exchange }: OfferTerms): OfferTerms => ({
+const cleanSide = ({ cash, itemIds }: Side): Side => ({
   cash: Math.round(cash * 100) / 100,
   itemIds: [...new Set(itemIds)],
+});
+
+const cleanTerms = ({ buyer, seller, exchange }: OfferTerms): OfferTerms => ({
+  buyer: cleanSide(buyer),
+  seller: cleanSide(seller),
   exchange:
     exchange.method === "ship"
       ? { method: "ship", paidBy: exchange.paidBy }
@@ -218,16 +234,16 @@ export function acceptOffer(m: MarketData, me: string, offerId: string): Outcome
 
   const now = new Date().toISOString();
   const items = { ...m.items };
-  items[listing.itemId] = { ...items[listing.itemId], ownerId: offer.buyerId };
-  for (const id of terms.itemIds) items[id] = { ...items[id], ownerId: offer.sellerId };
+  for (const id of [listing.itemId, ...terms.seller.itemIds]) items[id] = { ...items[id], ownerId: offer.buyerId };
+  for (const id of terms.buyer.itemIds) items[id] = { ...items[id], ownerId: offer.sellerId };
 
-  const moved = new Set([listing.itemId, ...terms.itemIds]);
+  const moved = new Set(tradedItemIds(listing, terms));
   const offers = { ...m.offers, [offerId]: { ...offer, status: "accepted" as const, updatedAt: now } };
   for (const o of Object.values(offers)) {
     if (o.id === offerId || o.status !== "pending") continue;
     if (o.listingId === listing.id) {
       offers[o.id] = { ...o, status: "closed", closedReason: "The card was sold to another collector.", updatedAt: now };
-    } else if (latestTerms(o).itemIds.some((id) => moved.has(id))) {
+    } else if (offeredItemIds(latestTerms(o)).some((id) => moved.has(id))) {
       offers[o.id] = { ...o, status: "closed", closedReason: "A card in this offer was traded away.", updatedAt: now };
     }
   }

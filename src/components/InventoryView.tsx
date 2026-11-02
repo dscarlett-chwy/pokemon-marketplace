@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { formatMoney } from "@/lib/format";
 import { useHydrated } from "@/store/hydration";
-import { activeListingForItem, latestTerms, useMarketplace } from "@/store/marketplace";
+import { activeListingForItem, latestTerms, offeredItemIds, useMarketplace } from "@/store/marketplace";
 import { AddCardPanel } from "./AddCardPanel";
 import { CardImage } from "./CardImage";
 import { ListCardDialog } from "./ListCardDialog";
@@ -22,7 +22,7 @@ export function InventoryView() {
 
   const mine = useMemo(() => Object.values(items).filter((i) => i.ownerId === me).reverse(), [items, me]);
   const inOffers = useMemo(
-    () => new Set(Object.values(offers).filter((o) => o.status === "pending").flatMap((o) => latestTerms(o).itemIds)),
+    () => new Set(Object.values(offers).filter((o) => o.status === "pending").flatMap((o) => offeredItemIds(latestTerms(o)))),
     [offers],
   );
   const listingItem = listingItemId ? items[listingItemId] : null;

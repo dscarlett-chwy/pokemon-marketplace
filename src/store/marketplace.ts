@@ -8,7 +8,14 @@ import { seedMarket, USERS } from "@/lib/seed";
 import type { Condition, MarketData, OfferTerms, Result } from "@/lib/types";
 import { useNotice } from "./notice";
 
-export { activeListingForItem, latestTerms, partyOf, tradeableItems, whoseTurn } from "@/lib/marketplace-rules";
+export {
+  activeListingForItem,
+  latestTerms,
+  offeredItemIds,
+  partyOf,
+  tradeableItems,
+  whoseTurn,
+} from "@/lib/marketplace-rules";
 
 type Data = MarketData & { currentUserId: string; loaded: boolean };
 

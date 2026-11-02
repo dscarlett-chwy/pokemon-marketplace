@@ -9,7 +9,7 @@ import { latestTerms, partyOf, useMarketplace, whoseTurn } from "@/store/marketp
 import { useNotice } from "@/store/notice";
 import { CardImage } from "./CardImage";
 import { OfferForm } from "./OfferForm";
-import { termsText, TermsSummary } from "./TermsSummary";
+import { sellerGivesText, sideText, termsText, TermsSummary } from "./TermsSummary";
 
 type Mode = "idle" | "confirm-accept" | "confirm-decline" | "counter";
 
@@ -84,7 +84,7 @@ export function OfferThread({ offer }: { offer: Offer }) {
                 , {formatWhen(round.at)}
               </p>
               <div className="mt-2">
-                <TermsSummary terms={round.terms} area={listing.area} nameFor={nameFor} />
+                <TermsSummary terms={round.terms} listing={listing} nameFor={nameFor} />
               </div>
               {round.message && <p className="mt-2 text-base">&ldquo;{round.message}&rdquo;</p>}
             </li>
@@ -96,7 +96,7 @@ export function OfferThread({ offer }: { offer: Offer }) {
         {offer.status === "accepted" ? (
           <>
             <p className="font-display text-xl font-bold text-accept">
-              Trade complete for {termsText(terms)}, {handover}.{" "}
+              Trade complete for {termsText(terms, nameFor)}, {handover}.{" "}
               <span className="font-sans text-base font-normal text-ink">
                 {myParty === "buyer" ? `${card.name} is now in your cards.` : `${card.name} went to ${other.name}.`}
               </span>
@@ -113,7 +113,7 @@ export function OfferThread({ offer }: { offer: Offer }) {
           </p>
         ) : !myTurn ? (
           <p className="text-lg">
-            Waiting on {other.name} to accept, decline, or counter {termsText(terms)}, {handover}.
+            Waiting on {other.name} to accept, decline, or counter {termsText(terms, nameFor)}, {handover}.
           </p>
         ) : mode === "counter" ? (
           <>
@@ -122,7 +122,6 @@ export function OfferThread({ offer }: { offer: Offer }) {
               listing={listing}
               buyerId={offer.buyerId}
               initial={terms}
-              pickerLabel={myParty === "seller" ? `Ask for cards from ${other.name}'s collection` : "Add cards from your collection"}
               submitLabel="Send counter"
               names={{ buyer: nameFor("buyer"), seller: nameFor("seller") }}
               onCancel={() => setMode("idle")}
@@ -140,8 +139,8 @@ export function OfferThread({ offer }: { offer: Offer }) {
           <div className="space-y-3">
             <p className="text-lg">
               {myParty === "seller"
-                ? `Sell ${card.name} to ${other.name} for ${termsText(terms)}, ${handover}?`
-                : `Give ${termsText(terms)} for ${card.name}, ${handover}?`}{" "}
+                ? `Give ${sellerGivesText(card.name, terms.seller)} to ${other.name} for ${sideText(terms.buyer)}, ${handover}?`
+                : `Give ${sideText(terms.buyer)} for ${sellerGivesText(card.name, terms.seller)}, ${handover}?`}{" "}
               This completes the trade and moves the cards.
             </p>
             <div className="flex flex-wrap gap-3">
@@ -181,7 +180,7 @@ export function OfferThread({ offer }: { offer: Offer }) {
         ) : (
           <div className="space-y-3">
             <p className="text-lg">
-              Your turn. {other.name} {offer.rounds.length === 1 ? "offered" : "countered with"} {termsText(terms)},{" "}
+              Your turn. {other.name} {offer.rounds.length === 1 ? "offered" : "countered with"} {termsText(terms, nameFor)},{" "}
               {handover}.
             </p>
             <div className="flex flex-wrap gap-3">

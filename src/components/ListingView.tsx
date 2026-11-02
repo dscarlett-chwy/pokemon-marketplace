@@ -156,8 +156,7 @@ export function ListingView() {
                 <OfferForm
                   listing={listing}
                   buyerId={me}
-                  initial={{ cash: listing.askingPrice, itemIds: [] }}
-                  pickerLabel="Add cards from your collection"
+                  initial={{ buyer: { cash: listing.askingPrice, itemIds: [] } }}
                   submitLabel="Send offer"
                   names={{ buyer: "You", seller: seller.name }}
                   onSubmit={(terms, message) => {

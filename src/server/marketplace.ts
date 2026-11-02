@@ -11,6 +11,7 @@ import {
   type MarketData,
   type OfferTerms,
   type Result,
+  type Side,
 } from "@/lib/types";
 import { getDb, readMarket, resetMarket, transaction, writeChanges } from "./db";
 
@@ -23,18 +24,26 @@ const isNewId = (v: unknown, prefix: string): v is string =>
   typeof v === "string" && new RegExp(`^${prefix}-[a-z0-9]{1,16}$`).test(v);
 const isText = (v: unknown): v is string => typeof v === "string" && v.length <= MAX_TEXT;
 const isMethod = (v: unknown): v is ExchangeMethod => EXCHANGE_METHODS.includes(v as ExchangeMethod);
-const isTerms = (v: unknown): v is OfferTerms => {
-  const t = v as OfferTerms;
+const isSide = (v: unknown): v is Side => {
+  const s = v as Side;
   return (
-    typeof t === "object" &&
-    t !== null &&
-    typeof t.cash === "number" &&
-    Array.isArray(t.itemIds) &&
-    t.itemIds.length <= MAX_TRADE_CARDS &&
-    t.itemIds.every(isRef) &&
-    isExchange(t.exchange)
+    typeof s === "object" &&
+    s !== null &&
+    typeof s.cash === "number" &&
+    Array.isArray(s.itemIds) &&
+    s.itemIds.length <= MAX_TRADE_CARDS &&
+    s.itemIds.every(isRef)
   );
 };
+const isTerms = (v: unknown): v is OfferTerms => {
+  const t = v as OfferTerms;
+  return typeof t === "object" && t !== null && isSide(t.buyer) && isSide(t.seller) && isExchange(t.exchange);
+};
+const cleanTerms = (t: OfferTerms): OfferTerms => ({
+  buyer: { cash: t.buyer.cash, itemIds: t.buyer.itemIds },
+  seller: { cash: t.seller.cash, itemIds: t.seller.itemIds },
+  exchange: t.exchange,
+});
 const isExchange = (v: unknown): v is Exchange => {
   const e = v as Exchange;
   if (typeof e !== "object" || e === null || !isMethod(e.method)) return false;
@@ -102,14 +111,12 @@ export function withdrawListing(me: string, listingId: unknown): Result {
 
 export function makeOffer(me: string, listingId: unknown, terms: unknown, message: unknown, id: unknown): Result {
   if (!isRef(listingId) || !isTerms(terms) || !isText(message) || !isNewId(id, "o")) return INVALID;
-  const clean = { cash: terms.cash, itemIds: terms.itemIds, exchange: terms.exchange };
-  return apply(me, (m) => rules.makeOffer(m, me, listingId, clean, message, id));
+  return apply(me, (m) => rules.makeOffer(m, me, listingId, cleanTerms(terms), message, id));
 }
 
 export function counterOffer(me: string, offerId: unknown, terms: unknown, message: unknown): Result {
   if (!isRef(offerId) || !isTerms(terms) || !isText(message)) return INVALID;
-  const clean = { cash: terms.cash, itemIds: terms.itemIds, exchange: terms.exchange };
-  return apply(me, (m) => rules.counterOffer(m, me, offerId, clean, message));
+  return apply(me, (m) => rules.counterOffer(m, me, offerId, cleanTerms(terms), message));
 }
 
 export function acceptOffer(me: string, offerId: unknown): Result {

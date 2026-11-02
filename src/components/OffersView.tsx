@@ -102,6 +102,7 @@ export function OffersView() {
                 const other = users[tab === "seller" ? offer.buyerId : offer.sellerId];
                 const r = rank(offer, me);
                 const terms = latestTerms(offer);
+                const nameFor = (p: Party) => (p === tab ? "You" : other.name);
                 const status =
                   offer.status === "accepted"
                     ? "Accepted"
@@ -129,7 +130,7 @@ export function OffersView() {
                       <span className="min-w-0 flex-1">
                         <span className="block truncate font-display font-bold">{card.name}</span>
                         <span className="block truncate text-sm text-ink-soft">
-                          {tab === "seller" ? `From ${other.name}` : `To ${other.name}`}, {termsText(terms)},{" "}
+                          {tab === "seller" ? `From ${other.name}` : `To ${other.name}`}, {termsText(terms, nameFor)},{" "}
                           {METHOD_LABELS[terms.exchange.method].toLowerCase()}
                         </span>
                       </span>

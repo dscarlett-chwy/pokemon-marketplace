@@ -1,6 +1,6 @@
 import type { Card } from "./card";
 import seedCards from "./seed-cards.json";
-import type { ExchangeMethod, Listing, MarketData, Offer, OwnedCard, User } from "./types";
+import type { ExchangeMethod, Listing, MarketData, Offer, OwnedCard, Side, User } from "./types";
 
 export const USERS: User[] = [
   { id: "ash", name: "Ash" },
@@ -70,6 +70,8 @@ export const SEED_LISTINGS: Listing[] = [
   listing("l-8", "i-misty-7", "misty", 975, true, ["ship"], "Played but the holo still pops.", "2026-10-27T12:00:00Z"),
 ];
 
+const give = (cash: number, itemIds: string[] = []): Side => ({ cash, itemIds });
+
 export const SEED_OFFERS: Offer[] = [
   {
     id: "o-1",
@@ -79,7 +81,7 @@ export const SEED_OFFERS: Offer[] = [
     rounds: [
       {
         by: "buyer",
-        terms: { cash: 400, itemIds: ["i-ash-2"], exchange: { method: "ship", paidBy: "buyer" } },
+        terms: { buyer: give(400, ["i-ash-2"]), seller: give(0), exchange: { method: "ship", paidBy: "buyer" } },
         message: "Would you take my Base Set Pikachu plus cash?",
         at: "2026-11-01T18:10:00Z",
       },
@@ -96,7 +98,11 @@ export const SEED_OFFERS: Offer[] = [
     rounds: [
       {
         by: "buyer",
-        terms: { cash: 280, itemIds: [], exchange: { method: "pickup", meetup: "Saturday afternoon, outside Oak's lab" } },
+        terms: {
+          buyer: give(280),
+          seller: give(0),
+          exchange: { method: "pickup", meetup: "Saturday afternoon, outside Oak's lab" },
+        },
         message: "",
         at: "2026-11-01T20:02:00Z",
       },
@@ -113,13 +119,17 @@ export const SEED_OFFERS: Offer[] = [
     rounds: [
       {
         by: "buyer",
-        terms: { cash: 180, itemIds: [], exchange: { method: "pickup", meetup: "Any weekday after 6pm" } },
+        terms: { buyer: give(180), seller: give(0), exchange: { method: "pickup", meetup: "Any weekday after 6pm" } },
         message: "",
         at: "2026-10-31T16:00:00Z",
       },
       {
         by: "seller",
-        terms: { cash: 215, itemIds: [], exchange: { method: "pickup", meetup: "Cerulean Gym lobby, Sunday at 2pm" } },
+        terms: {
+          buyer: give(215),
+          seller: give(0),
+          exchange: { method: "pickup", meetup: "Cerulean Gym lobby, Sunday at 2pm" },
+        },
         message: "Meet me at 215 and you can pick it up Sunday.",
         at: "2026-11-01T08:30:00Z",
       },
@@ -127,6 +137,29 @@ export const SEED_OFFERS: Offer[] = [
     status: "pending",
     closedReason: null,
     updatedAt: "2026-11-01T08:30:00Z",
+  },
+  {
+    id: "o-4",
+    listingId: "l-7",
+    buyerId: "ash",
+    sellerId: "misty",
+    rounds: [
+      {
+        by: "buyer",
+        terms: { buyer: give(0, ["i-ash-4"]), seller: give(0), exchange: { method: "ship", paidBy: "buyer" } },
+        message: "Straight swap, my Clefable for your Pikachu?",
+        at: "2026-11-01T19:00:00Z",
+      },
+      {
+        by: "seller",
+        terms: { buyer: give(0, ["i-ash-4"]), seller: give(70), exchange: { method: "ship", paidBy: "seller" } },
+        message: "Your Clefable is worth more, so I'll add $70 and cover postage.",
+        at: "2026-11-02T09:20:00Z",
+      },
+    ],
+    status: "pending",
+    closedReason: null,
+    updatedAt: "2026-11-02T09:20:00Z",
   },
 ];
 
