@@ -77,7 +77,7 @@ const toParams = {
 type Row = Record<string, string | number | null>;
 
 function open() {
-  const path = resolve(process.env.DATABASE_PATH ?? "data/marketplace.db");
+  const path = resolve(/*turbopackIgnore: true*/ process.env.DATABASE_PATH ?? "data/marketplace.db");
   mkdirSync(dirname(path), { recursive: true });
   const db = new DatabaseSync(path);
   db.exec("PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;");
