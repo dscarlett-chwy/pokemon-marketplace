@@ -47,15 +47,18 @@ function apply(me: string, rule: (m: MarketData, me: string) => rules.Outcome): 
 
 export async function addCard(me: string, cardId: unknown, condition: unknown, id: unknown): Promise<Result> {
   if (!isRef(cardId) || !CONDITIONS.includes(condition as Condition) || !isNewId(id, "i")) return INVALID;
-  let card: Card | undefined = loadMarket().cards[cardId];
-  if (!card) {
-    try {
-      card = await getCard(cardId);
-    } catch (error) {
-      return { ok: false, error: error instanceof TcgUnavailableError ? error.message : "Card lookup failed" };
-    }
-  }
+  const card = loadMarket().cards[cardId] ?? (await lookUpCard(cardId));
+  if (typeof card === "string") return { ok: false, error: card };
   return apply(me, (m) => rules.addCard(m, me, card, condition as Condition, id));
+}
+
+/** Card details come from the catalog, never from the browser, so prices can't be made up. */
+async function lookUpCard(cardId: string): Promise<Card | string> {
+  try {
+    return await getCard(cardId);
+  } catch (error) {
+    return error instanceof TcgUnavailableError ? error.message : "Card lookup failed";
+  }
 }
 
 export function createListing(me: string, input: unknown, id: unknown): Result {
