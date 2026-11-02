@@ -1,9 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
   cacheComponents: true,
   partialPrefetching: true,
+  images: {
+    remotePatterns: [new URL("https://images.pokemontcg.io/**"), new URL("https://images.scrydex.com/pokemon/**")],
+  },
   turbopack: {
     rules: {
       "*.css": {
