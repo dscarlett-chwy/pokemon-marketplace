@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { methodsText } from "@/lib/exchange";
 import { formatMoney, formatWhen } from "@/lib/format";
 import { useListingRows } from "@/lib/listing-rows";
 import { useHydrated } from "@/store/hydration";
@@ -81,6 +82,10 @@ export function ListingView() {
             <div>
               <dt className="text-sm text-ink-soft">Payment</dt>
               <dd className="text-lg font-semibold">{listing.openToTrades ? "Cash or trade" : "Cash only"}</dd>
+            </div>
+            <div className="col-span-full">
+              <dt className="text-sm text-ink-soft">Handover</dt>
+              <dd className="text-lg font-semibold">{methodsText(listing)}</dd>
             </div>
             <div>
               <dt className="text-sm text-ink-soft">Listed</dt>

@@ -2,7 +2,15 @@ import "server-only";
 import type { Card } from "@/lib/card";
 import * as rules from "@/lib/marketplace-rules";
 import { getCard, TcgUnavailableError } from "@/lib/tcg";
-import { CONDITIONS, type Condition, type MarketData, type OfferTerms, type Result } from "@/lib/types";
+import {
+  CONDITIONS,
+  EXCHANGE_METHODS,
+  type Condition,
+  type ExchangeMethod,
+  type MarketData,
+  type OfferTerms,
+  type Result,
+} from "@/lib/types";
 import { getDb, readMarket, resetMarket, transaction, writeChanges } from "./db";
 
 const INVALID: Result = { ok: false, error: "That request wasn't valid. Refresh the page and try again." };
@@ -13,6 +21,7 @@ const isRef = (v: unknown): v is string => typeof v === "string" && /^[\w.-]{1,6
 const isNewId = (v: unknown, prefix: string): v is string =>
   typeof v === "string" && new RegExp(`^${prefix}-[a-z0-9]{1,16}$`).test(v);
 const isText = (v: unknown): v is string => typeof v === "string" && v.length <= MAX_TEXT;
+const isMethod = (v: unknown): v is ExchangeMethod => EXCHANGE_METHODS.includes(v as ExchangeMethod);
 const isTerms = (v: unknown): v is OfferTerms => {
   const t = v as OfferTerms;
   return (
@@ -67,7 +76,15 @@ export function createListing(me: string, input: unknown, id: unknown): Result {
   if (!isRef(i.itemId) || typeof i.askingPrice !== "number" || typeof i.openToTrades !== "boolean" || !isText(i.note)) {
     return INVALID;
   }
-  const clean = { itemId: i.itemId, askingPrice: i.askingPrice, openToTrades: i.openToTrades, note: i.note };
+  if (!Array.isArray(i.exchangeMethods) || !i.exchangeMethods.every(isMethod) || !isText(i.area)) return INVALID;
+  const clean = {
+    itemId: i.itemId,
+    askingPrice: i.askingPrice,
+    openToTrades: i.openToTrades,
+    exchangeMethods: i.exchangeMethods,
+    area: i.area,
+    note: i.note,
+  };
   return apply(me, (m) => rules.createListing(m, me, clean, id));
 }
 

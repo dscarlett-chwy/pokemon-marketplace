@@ -21,12 +21,18 @@ export type OwnedCard = {
 
 export type ListingStatus = "active" | "sold" | "withdrawn";
 
+export const EXCHANGE_METHODS = ["pickup", "dropoff", "ship"] as const;
+export type ExchangeMethod = (typeof EXCHANGE_METHODS)[number];
+
 export type Listing = {
   id: string;
   itemId: string;
   sellerId: string;
   askingPrice: number;
   openToTrades: boolean;
+  exchangeMethods: ExchangeMethod[];
+  /** Where the seller meets for pickup or drop-off, like a neighborhood or city. */
+  area: string;
   note: string;
   status: ListingStatus;
   createdAt: string;

@@ -1,6 +1,6 @@
 import type { Card } from "./card";
 import seedCards from "./seed-cards.json";
-import type { Listing, MarketData, Offer, OwnedCard, User } from "./types";
+import type { ExchangeMethod, Listing, MarketData, Offer, OwnedCard, User } from "./types";
 
 export const USERS: User[] = [
   { id: "ash", name: "Ash" },
@@ -33,25 +33,41 @@ export const SEED_ITEMS: OwnedCard[] = [
   item("i-misty-7", "misty", "base1-4", "Moderately played"),
 ];
 
+const AREAS: Record<string, string> = { ash: "Pallet Town", misty: "Cerulean City" };
+
 const listing = (
   id: string,
   itemId: string,
   sellerId: string,
   askingPrice: number,
   openToTrades: boolean,
+  exchangeMethods: ExchangeMethod[],
   note: string,
   createdAt: string,
-): Listing => ({ id, itemId, sellerId, askingPrice, openToTrades, note, status: "active", createdAt });
+): Listing => ({
+  id,
+  itemId,
+  sellerId,
+  askingPrice,
+  openToTrades,
+  exchangeMethods,
+  area: exchangeMethods.some((x) => x !== "ship") ? AREAS[sellerId] : "",
+  note,
+  status: "active",
+  createdAt,
+});
+
+const ANY: ExchangeMethod[] = ["pickup", "dropoff", "ship"];
 
 export const SEED_LISTINGS: Listing[] = [
-  listing("l-1", "i-ash-1", "ash", 340, true, "Pulled it myself, sleeved straight from the pack.", "2026-10-30T15:00:00Z"),
-  listing("l-2", "i-ash-5", "ash", 95, false, "", "2026-10-28T19:20:00Z"),
-  listing("l-3", "i-misty-1", "misty", 235, true, "Clean holo, light whitening on one corner.", "2026-10-31T13:05:00Z"),
-  listing("l-4", "i-misty-2", "misty", 520, true, "Unlimited print. Happy to look at vintage trades.", "2026-10-25T10:40:00Z"),
-  listing("l-5", "i-misty-3", "misty", 2250, true, "", "2026-11-01T09:15:00Z"),
-  listing("l-6", "i-misty-4", "misty", 880, false, "Cash only on this one.", "2026-10-29T21:30:00Z"),
-  listing("l-7", "i-misty-5", "misty", 42, true, "", "2026-11-01T17:45:00Z"),
-  listing("l-8", "i-misty-7", "misty", 975, true, "Played but the holo still pops.", "2026-10-27T12:00:00Z"),
+  listing("l-1", "i-ash-1", "ash", 340, true, ANY, "Pulled it myself, sleeved straight from the pack.", "2026-10-30T15:00:00Z"),
+  listing("l-2", "i-ash-5", "ash", 95, false, ["ship"], "", "2026-10-28T19:20:00Z"),
+  listing("l-3", "i-misty-1", "misty", 235, true, ["pickup"], "Clean holo, light whitening on one corner.", "2026-10-31T13:05:00Z"),
+  listing("l-4", "i-misty-2", "misty", 520, true, ["pickup", "ship"], "Unlimited print. Happy to look at vintage trades.", "2026-10-25T10:40:00Z"),
+  listing("l-5", "i-misty-3", "misty", 2250, true, ["ship"], "", "2026-11-01T09:15:00Z"),
+  listing("l-6", "i-misty-4", "misty", 880, false, ["pickup", "dropoff"], "Cash only on this one.", "2026-10-29T21:30:00Z"),
+  listing("l-7", "i-misty-5", "misty", 42, true, ANY, "", "2026-11-01T17:45:00Z"),
+  listing("l-8", "i-misty-7", "misty", 975, true, ["ship"], "Played but the holo still pops.", "2026-10-27T12:00:00Z"),
 ];
 
 export const SEED_OFFERS: Offer[] = [

@@ -4,7 +4,7 @@ import { dirname, resolve } from "node:path";
 import { DatabaseSync, type SQLInputValue } from "node:sqlite";
 import type { Card } from "@/lib/card";
 import { seedMarket } from "@/lib/seed";
-import type { Condition, ListingStatus, MarketData, OfferRound, OfferStatus } from "@/lib/types";
+import type { Condition, ExchangeMethod, ListingStatus, MarketData, OfferRound, OfferStatus } from "@/lib/types";
 
 const SCHEMA = `
   CREATE TABLE IF NOT EXISTS users (
@@ -27,6 +27,8 @@ const SCHEMA = `
     seller_id TEXT NOT NULL REFERENCES users(id),
     asking_price REAL NOT NULL,
     open_to_trades INTEGER NOT NULL,
+    exchange_methods TEXT NOT NULL,
+    area TEXT NOT NULL,
     note TEXT NOT NULL,
     status TEXT NOT NULL,
     created_at TEXT NOT NULL
@@ -54,10 +56,11 @@ const UPSERT: Record<Table, string> = {
     ON CONFLICT(id) DO UPDATE SET data = excluded.data`,
   items: `INSERT INTO items (id, owner_id, card_id, condition) VALUES ($id, $ownerId, $cardId, $condition)
     ON CONFLICT(id) DO UPDATE SET owner_id = excluded.owner_id, card_id = excluded.card_id, condition = excluded.condition`,
-  listings: `INSERT INTO listings (id, item_id, seller_id, asking_price, open_to_trades, note, status, created_at)
-    VALUES ($id, $itemId, $sellerId, $askingPrice, $openToTrades, $note, $status, $createdAt)
+  listings: `INSERT INTO listings
+      (id, item_id, seller_id, asking_price, open_to_trades, exchange_methods, area, note, status, created_at)
+    VALUES ($id, $itemId, $sellerId, $askingPrice, $openToTrades, $exchangeMethods, $area, $note, $status, $createdAt)
     ON CONFLICT(id) DO UPDATE SET asking_price = excluded.asking_price, open_to_trades = excluded.open_to_trades,
-      note = excluded.note, status = excluded.status`,
+      exchange_methods = excluded.exchange_methods, area = excluded.area, note = excluded.note, status = excluded.status`,
   offers: `INSERT INTO offers (id, listing_id, buyer_id, seller_id, rounds, status, closed_reason, updated_at)
     VALUES ($id, $listingId, $buyerId, $sellerId, $rounds, $status, $closedReason, $updatedAt)
     ON CONFLICT(id) DO UPDATE SET rounds = excluded.rounds, status = excluded.status,
@@ -70,11 +73,38 @@ const toParams = {
   users: (u: MarketData["users"][string]): Params => ({ ...u }),
   cards: (c: Card): Params => ({ id: c.id, data: JSON.stringify(c) }),
   items: (i: MarketData["items"][string]): Params => ({ ...i }),
-  listings: (l: MarketData["listings"][string]): Params => ({ ...l, openToTrades: l.openToTrades ? 1 : 0 }),
+  listings: (l: MarketData["listings"][string]): Params => ({
+    ...l,
+    openToTrades: l.openToTrades ? 1 : 0,
+    exchangeMethods: JSON.stringify(l.exchangeMethods),
+  }),
   offers: (o: MarketData["offers"][string]): Params => ({ ...o, rounds: JSON.stringify(o.rounds) }),
 };
 
 type Row = Record<string, string | number | null>;
+
+const columns = (db: DatabaseSync, table: Table) =>
+  (db.prepare(`PRAGMA table_info(${table})`).all() as Row[]).map((c) => c.name);
+
+/** Upgrades databases saved by older versions. `PRAGMA user_version` counts the steps already applied. */
+const MIGRATIONS: ((db: DatabaseSync) => void)[] = [
+  (db) => {
+    if (columns(db, "listings").includes("exchange_methods")) return;
+    db.exec(`
+      ALTER TABLE listings ADD COLUMN exchange_methods TEXT NOT NULL DEFAULT '["pickup","dropoff","ship"]';
+      ALTER TABLE listings ADD COLUMN area TEXT NOT NULL DEFAULT '';
+    `);
+  },
+];
+
+function migrate(db: DatabaseSync) {
+  const { user_version: version } = db.prepare("PRAGMA user_version").get() as { user_version: number };
+  if (version >= MIGRATIONS.length) return;
+  transaction(db, () => {
+    for (const step of MIGRATIONS.slice(version)) step(db);
+    db.exec(`PRAGMA user_version = ${MIGRATIONS.length}`);
+  });
+}
 
 function open() {
   const path = resolve(/*turbopackIgnore: true*/ process.env.DATABASE_PATH ?? "data/marketplace.db");
@@ -91,6 +121,8 @@ const globalForDb = globalThis as unknown as { marketplaceDb?: DatabaseSync };
 
 export function getDb() {
   globalForDb.marketplaceDb ??= open();
+  // Hot reloads keep the open connection, so code with newer migrations still has to apply them.
+  migrate(globalForDb.marketplaceDb);
   return globalForDb.marketplaceDb;
 }
 
@@ -133,6 +165,8 @@ export function readMarket(db: DatabaseSync): MarketData {
       sellerId: r.seller_id as string,
       askingPrice: r.asking_price as number,
       openToTrades: r.open_to_trades === 1,
+      exchangeMethods: JSON.parse(r.exchange_methods as string) as ExchangeMethod[],
+      area: r.area as string,
       note: r.note as string,
       status: r.status as ListingStatus,
       createdAt: r.created_at as string,

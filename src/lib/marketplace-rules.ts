@@ -1,5 +1,15 @@
 import type { Card } from "./card";
-import type { Condition, Listing, MarketData, Offer, OfferTerms, Party, Result } from "./types";
+import {
+  EXCHANGE_METHODS,
+  type Condition,
+  type ExchangeMethod,
+  type Listing,
+  type MarketData,
+  type Offer,
+  type OfferTerms,
+  type Party,
+  type Result,
+} from "./types";
 
 /**
  * Pure marketplace rules shared by the browser (instant feedback) and the server (source of truth).
@@ -78,14 +88,30 @@ export function addCard(m: MarketData, me: string, card: Card, condition: Condit
   );
 }
 
-export type ListingInput = { itemId: string; askingPrice: number; openToTrades: boolean; note: string };
+export type ListingInput = {
+  itemId: string;
+  askingPrice: number;
+  openToTrades: boolean;
+  exchangeMethods: ExchangeMethod[];
+  area: string;
+  note: string;
+};
+
+export const MAX_AREA = 60;
+
+export const meetsInPerson = (methods: ExchangeMethod[]) => methods.some((x) => x !== "ship");
 
 export function createListing(m: MarketData, me: string, input: ListingInput, id: string): Outcome {
   const { itemId, askingPrice, openToTrades, note } = input;
+  const exchangeMethods = EXCHANGE_METHODS.filter((x) => input.exchangeMethods.includes(x));
+  const area = meetsInPerson(exchangeMethods) ? input.area.trim() : "";
   const item = m.items[itemId];
   if (!item || item.ownerId !== me) return fail(m, "You can only list cards you own.");
   if (activeListingForItem(m.listings, itemId)) return fail(m, "This card is already listed.");
   if (!Number.isFinite(askingPrice) || askingPrice <= 0) return fail(m, "Set an asking price above $0.");
+  if (exchangeMethods.length === 0) return fail(m, "Pick at least one way to hand over the card.");
+  if (meetsInPerson(exchangeMethods) && !area) return fail(m, "Add your area so buyers know where to meet.");
+  if (area.length > MAX_AREA) return fail(m, `Keep your area under ${MAX_AREA} characters.`);
   if (m.listings[id]) return fail(m, TAKEN);
   const listing: Listing = {
     id,
@@ -93,6 +119,8 @@ export function createListing(m: MarketData, me: string, input: ListingInput, id
     sellerId: me,
     askingPrice: Math.round(askingPrice * 100) / 100,
     openToTrades,
+    exchangeMethods,
+    area,
     note: note.trim(),
     status: "active",
     createdAt: new Date().toISOString(),

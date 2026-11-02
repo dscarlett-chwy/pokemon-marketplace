@@ -3,11 +3,19 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import type { Card } from "@/lib/card";
+import { METHOD_LABELS } from "@/lib/exchange";
 import { formatMoney } from "@/lib/format";
-import type { OwnedCard } from "@/lib/types";
+import { MAX_AREA, meetsInPerson } from "@/lib/marketplace-rules";
+import { EXCHANGE_METHODS, type ExchangeMethod, type OwnedCard } from "@/lib/types";
 import { useMarketplace } from "@/store/marketplace";
 import { useNotice } from "@/store/notice";
 import { CardImage } from "./CardImage";
+
+const METHOD_HINTS: Record<ExchangeMethod, string> = {
+  pickup: "The buyer collects the card from you.",
+  dropoff: "You bring the card to the buyer.",
+  ship: "You mail the card. Who pays postage is part of the offer.",
+};
 
 export function ListCardDialog({ item, card, onClose }: { item: OwnedCard; card: Card; onClose: () => void }) {
   const ref = useRef<HTMLDialogElement>(null);
@@ -16,6 +24,8 @@ export function ListCardDialog({ item, card, onClose }: { item: OwnedCard; card:
   const show = useNotice((s) => s.show);
   const [price, setPrice] = useState(card.marketPrice ? String(Math.max(1, Math.round(card.marketPrice))) : "");
   const [openToTrades, setOpenToTrades] = useState(true);
+  const [methods, setMethods] = useState<ExchangeMethod[]>(["ship"]);
+  const [area, setArea] = useState("");
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
 
@@ -23,9 +33,19 @@ export function ListCardDialog({ item, card, onClose }: { item: OwnedCard; card:
     ref.current?.showModal();
   }, []);
 
+  const toggleMethod = (m: ExchangeMethod) =>
+    setMethods((all) => (all.includes(m) ? all.filter((x) => x !== m) : [...all, m]));
+
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    const result = createListing({ itemId: item.id, askingPrice: Number(price), openToTrades, note });
+    const result = createListing({
+      itemId: item.id,
+      askingPrice: Number(price),
+      openToTrades,
+      exchangeMethods: methods,
+      area,
+      note,
+    });
     if (!result.ok) return setError(result.error);
     show(`${card.name} is listed for sale`);
     onClose();
@@ -88,6 +108,41 @@ export function ListCardDialog({ item, card, onClose }: { item: OwnedCard; card:
             <span className="block text-sm text-ink-soft">Buyers can offer their own cards, with or without cash.</span>
           </span>
         </label>
+
+        <fieldset>
+          <legend className="font-semibold">Handover</legend>
+          <p className="text-sm text-ink-soft">How the card can reach the buyer. Pick every way that works for you.</p>
+          <div className="mt-2 space-y-2">
+            {EXCHANGE_METHODS.map((m) => (
+              <label key={m} className="flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  checked={methods.includes(m)}
+                  onChange={() => toggleMethod(m)}
+                  className="mt-1 size-5 accent-cardback"
+                />
+                <span>
+                  <span className="font-semibold">{METHOD_LABELS[m]}</span>
+                  <span className="block text-sm text-ink-soft">{METHOD_HINTS[m]}</span>
+                </span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
+        {meetsInPerson(methods) && (
+          <label className="block">
+            <span className="font-semibold">Your area</span>
+            <span className="block text-sm text-ink-soft">A neighborhood or city. You agree on the exact spot in the offer.</span>
+            <input
+              value={area}
+              onChange={(e) => setArea(e.target.value)}
+              maxLength={MAX_AREA}
+              placeholder="Cerulean City"
+              className="mt-1 w-full rounded-md border border-rule bg-white px-3 py-2"
+            />
+          </label>
+        )}
 
         <label className="block">
           <span className="font-semibold">Note for buyers</span>
