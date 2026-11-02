@@ -81,7 +81,12 @@ export const SEED_OFFERS: Offer[] = [
     rounds: [
       {
         by: "buyer",
-        terms: { buyer: give(400, ["i-ash-2"]), seller: give(0), exchange: { method: "ship", paidBy: "buyer" } },
+        terms: {
+          buyer: give(400, ["i-ash-2"]),
+          seller: give(0),
+          exchange: { method: "ship", paidBy: "buyer" },
+          payment: "online",
+        },
         message: "Would you take my Base Set Pikachu plus cash?",
         at: "2026-11-01T18:10:00Z",
       },
@@ -102,6 +107,7 @@ export const SEED_OFFERS: Offer[] = [
           buyer: give(280),
           seller: give(0),
           exchange: { method: "pickup", meetup: "Saturday afternoon, outside Oak's lab" },
+          payment: "in_person",
         },
         message: "",
         at: "2026-11-01T20:02:00Z",
@@ -119,7 +125,12 @@ export const SEED_OFFERS: Offer[] = [
     rounds: [
       {
         by: "buyer",
-        terms: { buyer: give(180), seller: give(0), exchange: { method: "pickup", meetup: "Any weekday after 6pm" } },
+        terms: {
+          buyer: give(180),
+          seller: give(0),
+          exchange: { method: "pickup", meetup: "Any weekday after 6pm" },
+          payment: "in_person",
+        },
         message: "",
         at: "2026-10-31T16:00:00Z",
       },
@@ -129,6 +140,7 @@ export const SEED_OFFERS: Offer[] = [
           buyer: give(215),
           seller: give(0),
           exchange: { method: "pickup", meetup: "Cerulean Gym lobby, Sunday at 2pm" },
+          payment: "in_person",
         },
         message: "Meet me at 215 and you can pick it up Sunday.",
         at: "2026-11-01T08:30:00Z",
@@ -146,13 +158,23 @@ export const SEED_OFFERS: Offer[] = [
     rounds: [
       {
         by: "buyer",
-        terms: { buyer: give(0, ["i-ash-4"]), seller: give(0), exchange: { method: "ship", paidBy: "buyer" } },
+        terms: {
+          buyer: give(0, ["i-ash-4"]),
+          seller: give(0),
+          exchange: { method: "ship", paidBy: "buyer" },
+          payment: null,
+        },
         message: "Straight swap, my Clefable for your Pikachu?",
         at: "2026-11-01T19:00:00Z",
       },
       {
         by: "seller",
-        terms: { buyer: give(0, ["i-ash-4"]), seller: give(70), exchange: { method: "ship", paidBy: "seller" } },
+        terms: {
+          buyer: give(0, ["i-ash-4"]),
+          seller: give(70),
+          exchange: { method: "ship", paidBy: "seller" },
+          payment: "online",
+        },
         message: "Your Clefable is worth more, so I'll add $70 and cover postage.",
         at: "2026-11-02T09:20:00Z",
       },

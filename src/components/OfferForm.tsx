@@ -3,11 +3,21 @@
 import { useMemo, useState } from "react";
 import { exchangeLabel, METHOD_LABELS } from "@/lib/exchange";
 import { formatMoney } from "@/lib/format";
-import { MAX_MEETUP } from "@/lib/marketplace-rules";
-import type { Exchange, ExchangeMethod, Listing, OfferTerms, Party, Result, Side } from "@/lib/types";
+import { defaultPayment, MAX_MEETUP } from "@/lib/marketplace-rules";
+import {
+  PAYMENT_METHODS,
+  type Exchange,
+  type ExchangeMethod,
+  type Listing,
+  type OfferTerms,
+  type Party,
+  type PaymentMethod,
+  type Result,
+  type Side,
+} from "@/lib/types";
 import { tradeableItems, useMarketplace } from "@/store/marketplace";
 import { CardImage } from "./CardImage";
-import { givesLabel, marketValue } from "./TermsSummary";
+import { givesLabel, marketValue, paymentText } from "./TermsSummary";
 
 function CashInput({ value, onChange }: { value: string; onChange: (value: string) => void }) {
   return (
@@ -84,7 +94,7 @@ export function OfferForm({
 }: {
   listing: Listing;
   buyerId: string;
-  initial: { buyer: Side; seller?: Side; exchange?: Exchange };
+  initial: { buyer: Side; seller?: Side; exchange?: Exchange; payment?: PaymentMethod | null };
   submitLabel: string;
   /** "You" for the viewer, otherwise the collector's name. */
   names: Record<Party, string>;
@@ -104,6 +114,7 @@ export function OfferForm({
   const [method, setMethod] = useState<ExchangeMethod>(initial.exchange?.method ?? listing.exchangeMethods[0]);
   const [meetup, setMeetup] = useState(initial.exchange?.method === "ship" ? "" : (initial.exchange?.meetup ?? ""));
   const [paidBy, setPaidBy] = useState<Party>(initial.exchange?.method === "ship" ? initial.exchange.paidBy : "buyer");
+  const [payment, setPayment] = useState<PaymentMethod>(initial.payment ?? defaultPayment(method));
   const [message, setMessage] = useState("");
   const [error, setError] = useState<string | null>(null);
 
@@ -112,7 +123,15 @@ export function OfferForm({
   const seller: Side =
     trades && sellerOpen ? { cash: toCash(sellerCash), itemIds: sellerPicked } : { cash: 0, itemIds: [] };
   const exchange: Exchange = method === "ship" ? { method, paidBy } : { method, meetup };
+  const cashFrom = buyer.cash > 0 ? "buyer" : seller.cash > 0 ? "seller" : null;
+  const terms: OfferTerms = {
+    buyer,
+    seller,
+    exchange,
+    payment: cashFrom ? (method === "ship" ? "online" : payment) : null,
+  };
   const nameFor = (p: Party) => names[p];
+  const paymentLine = paymentText(terms, nameFor);
   const buyerValue = marketValue(buyer.cash || 0, buyer.itemIds, { items, cards });
   const sellerValue = marketValue(seller.cash || 0, [listing.itemId, ...seller.itemIds], { items, cards });
 
@@ -121,7 +140,7 @@ export function OfferForm({
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    const result = onSubmit({ buyer, seller, exchange }, message);
+    const result = onSubmit(terms, message);
     if (!result.ok) setError(result.error);
   };
 
@@ -186,7 +205,10 @@ export function OfferForm({
                 type="radio"
                 name="exchange-method"
                 checked={method === m}
-                onChange={() => setMethod(m)}
+                onChange={() => {
+                  setMethod(m);
+                  setPayment(defaultPayment(m));
+                }}
                 className="sr-only"
               />
               {METHOD_LABELS[m]}
@@ -227,6 +249,33 @@ export function OfferForm({
         )}
       </fieldset>
 
+      {cashFrom && (
+        <fieldset className="border-t border-rule pt-4">
+          <legend className="float-left w-full font-semibold">Payment</legend>
+          <div className="clear-left space-y-2 pt-2">
+            {PAYMENT_METHODS.filter((p) => p === "online" || method !== "ship").map((p) => (
+              <label key={p} className="flex items-start gap-3">
+                <input
+                  type="radio"
+                  name="payment-method"
+                  checked={terms.payment === p}
+                  onChange={() => setPayment(p)}
+                  className="mt-1 size-5 accent-cardback"
+                />
+                <span>
+                  <span className="font-semibold">{p === "online" ? "Online through Trade Binder" : "In person"}</span>
+                  <span className="block text-sm text-ink-soft">
+                    {p === "online"
+                      ? `${names[cashFrom]} ${names[cashFrom] === "You" ? "pay" : "pays"} into a hold. Trade Binder releases it once both of you confirm, or refunds it if the trade is cancelled.`
+                      : "Cash changes hands at the meetup."}
+                  </span>
+                </span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      )}
+
       <label className="block">
         <span className="font-semibold">Message</span>
         <span className="text-ink-soft"> (optional)</span>
@@ -245,6 +294,7 @@ export function OfferForm({
           <span className="font-semibold">{givesLabel(names.seller)}</span> about {formatMoney(Math.round(sellerValue))}.
         </p>
         <p className="text-sm">{exchangeLabel(exchange, listing.area, nameFor)}</p>
+        {paymentLine && <p className="text-sm">{paymentLine}</p>}
         <p className="text-sm text-ink-soft">Asking price {formatMoney(listing.askingPrice)}. Card values use recent market prices.</p>
       </div>
 

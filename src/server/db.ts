@@ -3,6 +3,7 @@ import { mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { DatabaseSync, type SQLInputValue } from "node:sqlite";
 import type { Card } from "@/lib/card";
+import { defaultPayment } from "@/lib/marketplace-rules";
 import { seedMarket } from "@/lib/seed";
 import type {
   Condition,
@@ -131,6 +132,19 @@ const MIGRATIONS: ((db: DatabaseSync) => void)[] = [
         return { ...round, terms: { buyer: { cash, itemIds }, seller: { cash: 0, itemIds: [] }, exchange } };
       });
       update.run({ id: r.id, rounds: JSON.stringify(split) });
+    }
+  },
+  (db) => {
+    const update = db.prepare("UPDATE offers SET rounds = $rounds WHERE id = $id");
+    for (const r of all(db, "SELECT id, rounds FROM offers")) {
+      const rounds = JSON.parse(r.rounds as string) as OfferRound[];
+      const paid = rounds.map((round) => {
+        const { terms } = round;
+        if (terms.payment !== undefined) return round;
+        const payment = terms.buyer.cash + terms.seller.cash > 0 ? defaultPayment(terms.exchange.method) : null;
+        return { ...round, terms: { ...terms, payment } };
+      });
+      update.run({ id: r.id, rounds: JSON.stringify(paid) });
     }
   },
 ];

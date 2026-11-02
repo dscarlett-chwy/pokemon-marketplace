@@ -46,7 +46,12 @@ export type Exchange = { method: "pickup" | "dropoff"; meetup: string } | { meth
 /** What one side adds. The seller always gives the listed card, so `itemIds` holds only extra cards. */
 export type Side = { cash: number; itemIds: string[] };
 
-export type OfferTerms = { buyer: Side; seller: Side; exchange: Exchange };
+export const PAYMENT_METHODS = ["in_person", "online"] as const;
+/** "online" is a simulated hold: the payer pays Trade Binder, which releases it when the trade completes. */
+export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
+
+/** `payment` is null when no cash changes hands. */
+export type OfferTerms = { buyer: Side; seller: Side; exchange: Exchange; payment: PaymentMethod | null };
 
 export type OfferRound = { by: Party; terms: OfferTerms; message: string; at: string };
 

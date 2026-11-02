@@ -9,7 +9,7 @@ import { latestTerms, partyOf, useMarketplace, whoseTurn } from "@/store/marketp
 import { useNotice } from "@/store/notice";
 import { CardImage } from "./CardImage";
 import { OfferForm } from "./OfferForm";
-import { sellerGivesText, sideText, termsText, TermsSummary } from "./TermsSummary";
+import { paymentText, sellerGivesText, sideText, termsText, TermsSummary } from "./TermsSummary";
 
 type Mode = "idle" | "confirm-accept" | "confirm-decline" | "counter";
 
@@ -37,6 +37,7 @@ export function OfferThread({ offer }: { offer: Offer }) {
   };
   const handover = exchangePhrase(terms.exchange, listing.area, nameFor);
   const meetup = terms.exchange.method === "ship" ? "" : terms.exchange.meetup;
+  const payment = paymentText(terms, nameFor);
 
   const run = (action: () => { ok: boolean; error?: string }, done: string) => {
     const result = action();
@@ -141,6 +142,7 @@ export function OfferThread({ offer }: { offer: Offer }) {
               {myParty === "seller"
                 ? `Give ${sellerGivesText(card.name, terms.seller)} to ${other.name} for ${sideText(terms.buyer)}, ${handover}?`
                 : `Give ${sideText(terms.buyer)} for ${sellerGivesText(card.name, terms.seller)}, ${handover}?`}{" "}
+              {payment && `${payment}.`}{" "}
               This completes the trade and moves the cards.
             </p>
             <div className="flex flex-wrap gap-3">

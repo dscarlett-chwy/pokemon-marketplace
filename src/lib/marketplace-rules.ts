@@ -9,6 +9,7 @@ import {
   type Offer,
   type OfferTerms,
   type Party,
+  type PaymentMethod,
   type Result,
   type Side,
 } from "./types";
@@ -81,7 +82,22 @@ function checkTerms(m: MarketData, listing: Listing, buyerId: string, terms: Off
   if (exchange.method !== "ship" && exchange.meetup.length > MAX_MEETUP) {
     return `Keep the meetup details under ${MAX_MEETUP} characters.`;
   }
+  if (buyer.cash + seller.cash > 0) {
+    if (terms.payment === null) return "Choose how the cash gets paid.";
+    if (terms.payment === "in_person" && exchange.method === "ship") {
+      return "Paying in person only works for pickup or drop-off. Choose online payment.";
+    }
+  }
   return checkSide(m, buyerId, buyer) ?? checkSide(m, listing.sellerId, seller);
+}
+
+export const defaultPayment = (method: ExchangeMethod): PaymentMethod => (method === "ship" ? "online" : "in_person");
+
+/** Who sends money, if anyone. Only one side can add cash. */
+export function payer(terms: OfferTerms): { party: Party; cash: number } | null {
+  if (terms.buyer.cash > 0) return { party: "buyer", cash: terms.buyer.cash };
+  if (terms.seller.cash > 0) return { party: "seller", cash: terms.seller.cash };
+  return null;
 }
 
 const cleanSide = ({ cash, itemIds }: Side): Side => ({
@@ -89,9 +105,10 @@ const cleanSide = ({ cash, itemIds }: Side): Side => ({
   itemIds: [...new Set(itemIds)],
 });
 
-const cleanTerms = ({ buyer, seller, exchange }: OfferTerms): OfferTerms => ({
+const cleanTerms = ({ buyer, seller, exchange, payment }: OfferTerms): OfferTerms => ({
   buyer: cleanSide(buyer),
   seller: cleanSide(seller),
+  payment: buyer.cash + seller.cash > 0 ? payment : null,
   exchange:
     exchange.method === "ship"
       ? { method: "ship", paidBy: exchange.paidBy }

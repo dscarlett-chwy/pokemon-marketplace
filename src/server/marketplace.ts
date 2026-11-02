@@ -5,6 +5,7 @@ import { getCard, TcgUnavailableError } from "@/lib/tcg";
 import {
   CONDITIONS,
   EXCHANGE_METHODS,
+  PAYMENT_METHODS,
   type Condition,
   type Exchange,
   type ExchangeMethod,
@@ -37,12 +38,20 @@ const isSide = (v: unknown): v is Side => {
 };
 const isTerms = (v: unknown): v is OfferTerms => {
   const t = v as OfferTerms;
-  return typeof t === "object" && t !== null && isSide(t.buyer) && isSide(t.seller) && isExchange(t.exchange);
+  return (
+    typeof t === "object" &&
+    t !== null &&
+    isSide(t.buyer) &&
+    isSide(t.seller) &&
+    isExchange(t.exchange) &&
+    (t.payment === null || PAYMENT_METHODS.includes(t.payment))
+  );
 };
 const cleanTerms = (t: OfferTerms): OfferTerms => ({
   buyer: { cash: t.buyer.cash, itemIds: t.buyer.itemIds },
   seller: { cash: t.seller.cash, itemIds: t.seller.itemIds },
   exchange: t.exchange,
+  payment: t.payment,
 });
 const isExchange = (v: unknown): v is Exchange => {
   const e = v as Exchange;

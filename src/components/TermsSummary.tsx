@@ -3,6 +3,7 @@
 import type { Card } from "@/lib/card";
 import { exchangeLabel } from "@/lib/exchange";
 import { formatMoney } from "@/lib/format";
+import { payer } from "@/lib/marketplace-rules";
 import type { Listing, MarketData, OfferTerms, Party, Side } from "@/lib/types";
 import { useMarketplace } from "@/store/marketplace";
 import { CardImage } from "./CardImage";
@@ -28,6 +29,15 @@ export function termsText(terms: OfferTerms, nameFor: NameFor) {
   if (!hasExtras(terms.seller)) return sideText(terms.buyer);
   const who = nameFor("seller");
   return `${sideText(terms.buyer)}, ${who === "You" ? "you add" : `${who} adds`} ${sideText(terms.seller)}`;
+}
+
+/** Like "Misty pays $70 online through Trade Binder", or null when no cash changes hands. */
+export function paymentText(terms: OfferTerms, nameFor: NameFor) {
+  const p = payer(terms);
+  if (!p || !terms.payment) return null;
+  const who = nameFor(p.party);
+  const how = terms.payment === "online" ? "online through Trade Binder" : "in person";
+  return `${who} ${who === "You" ? "pay" : "pays"} ${formatMoney(p.cash)} ${how}`;
 }
 
 /** Rough worth of cash plus cards at recent market prices. */
@@ -56,6 +66,7 @@ export function TermsSummary({ terms, listing, nameFor }: { terms: OfferTerms; l
   const items = useMarketplace((s) => s.items);
   const cards = useMarketplace((s) => s.cards);
   const { exchange } = terms;
+  const payment = paymentText(terms, nameFor);
 
   const entries = (ids: string[]) =>
     ids.flatMap((id) => {
@@ -87,6 +98,7 @@ export function TermsSummary({ terms, listing, nameFor }: { terms: OfferTerms; l
       <div>
         <p className="font-semibold">{exchangeLabel(exchange, listing.area, nameFor)}</p>
         {exchange.method !== "ship" && exchange.meetup && <p className="text-ink-soft">Meetup: {exchange.meetup}</p>}
+        {payment && <p className="tabular font-semibold">{payment}</p>}
       </div>
     </div>
   );
