@@ -57,7 +57,7 @@ body {
   bottom: 0;
   left: 1.1rem;
   width: 14px;
-  background: radial-gradient(circle at 7px 7px, var(--color-page) 6px, var(--color-rule) 7px, transparent 8px) 0 2.5rem / 14px 33.33% repeat-y;
+  background: radial-gradient(circle at 7px 7px, var(--color-page) 5px, #a9b5cb 6px, #a9b5cb 7px, transparent 8px) 0 2.5rem / 14px 33.33% repeat-y;
 }
 
 .pocket {
