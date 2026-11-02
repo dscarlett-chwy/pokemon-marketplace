@@ -11,9 +11,9 @@ export function CardTile({ row, isMine, priority }: { row: ListingRow; isMine: b
         <div className="mx-auto max-w-[245px]">
           <CardImage card={card} sizes="(min-width: 768px) 245px, 45vw" priority={priority} />
         </div>
-        <div className="mt-3 flex items-start justify-between gap-3">
+        <div className="mt-3 flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
           <div className="min-w-0">
-            <h2 className="truncate font-display text-lg font-bold leading-tight group-hover:underline">{card.name}</h2>
+            <h2 className="line-clamp-2 font-display text-lg font-bold leading-tight group-hover:underline">{card.name}</h2>
             <p className="truncate text-sm text-ink-soft">
               {card.set.name} #{card.number}
             </p>

@@ -64,7 +64,7 @@ export function InventoryView() {
                   <div className="mx-auto w-full max-w-[245px]">
                     <CardImage card={card} sizes="(min-width: 768px) 245px, 45vw" />
                   </div>
-                  <h2 className="mt-3 truncate font-display text-lg font-bold leading-tight">{card.name}</h2>
+                  <h2 className="mt-3 line-clamp-2 font-display text-lg font-bold leading-tight">{card.name}</h2>
                   <p className="truncate text-sm text-ink-soft">
                     {card.set.name} #{card.number}, {item.condition}
                   </p>
