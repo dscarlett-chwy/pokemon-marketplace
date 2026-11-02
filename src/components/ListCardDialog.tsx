@@ -14,7 +14,7 @@ export function ListCardDialog({ item, card, onClose }: { item: OwnedCard; card:
   const router = useRouter();
   const createListing = useMarketplace((s) => s.createListing);
   const show = useNotice((s) => s.show);
-  const [price, setPrice] = useState(card.marketPrice ? String(Math.round(card.marketPrice)) : "");
+  const [price, setPrice] = useState(card.marketPrice ? String(Math.max(1, Math.round(card.marketPrice))) : "");
   const [openToTrades, setOpenToTrades] = useState(true);
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);

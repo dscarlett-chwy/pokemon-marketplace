@@ -132,8 +132,10 @@ export function OfferThread({ offer }: { offer: Offer }) {
         ) : mode === "confirm-accept" ? (
           <div className="space-y-3">
             <p className="text-lg">
-              Accept {termsText(terms)} {myParty === "seller" ? "for" : "and get"} {card.name}? This completes the trade
-              and moves the cards.
+              {myParty === "seller"
+                ? `Sell ${card.name} to ${other.name} for ${termsText(terms)}?`
+                : `Give ${termsText(terms)} for ${card.name}?`}{" "}
+              This completes the trade and moves the cards.
             </p>
             <div className="flex flex-wrap gap-3">
               <button
