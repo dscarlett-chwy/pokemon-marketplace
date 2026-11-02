@@ -65,7 +65,7 @@ function DealItem({ row }: { row: DealRow }) {
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate font-display font-bold">{card.name}</span>
-          <span className="block truncate text-sm text-ink-soft">{summary}</span>
+          <span className="block text-sm text-ink-soft sm:truncate">{summary}</span>
           <span className="tabular block text-sm text-ink-soft sm:hidden">{when}</span>
         </span>
         <span className="tabular hidden shrink-0 text-sm text-ink-soft sm:block">{when}</span>
