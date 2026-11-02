@@ -1,26 +1,78 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-cardback: #233e9b;
+  --color-cardback-deep: #182c73;
+  --color-frame: #f6ce3a;
+  --color-page: #e7ecf5;
+  --color-sheet: #f7f9fc;
+  --color-ink: #14213d;
+  --color-ink-soft: #4a5775;
+  --color-rule: #c9d2e3;
+  --color-decline: #d63a1e;
+  --color-accept: #2f8f5b;
+
+  --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-atkinson), ui-sans-serif, system-ui, sans-serif;
+
+  --text-display: 2.75rem;
+  --text-display--line-height: 1.05;
+  --text-title: 1.75rem;
+  --text-title--line-height: 1.15;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  background: var(--color-page);
+  color: var(--color-ink);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid var(--color-frame);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 5px var(--color-cardback);
+  border-radius: 4px;
+}
+
+/* Binder sheet: ring holes run down the left edge; pockets are clear plastic. */
+.binder-sheet {
+  position: relative;
+  background: var(--color-sheet);
+  border: 1px solid var(--color-rule);
+  border-radius: 6px 14px 14px 6px;
+  padding: 1.25rem 1.25rem 1.25rem 3.25rem;
+}
+
+.binder-sheet::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 1.1rem;
+  width: 14px;
+  background: radial-gradient(circle at 7px 7px, var(--color-page) 6px, var(--color-rule) 7px, transparent 8px) 0 2.5rem / 14px 33.33% repeat-y;
+}
+
+.pocket {
+  position: relative;
+  background: linear-gradient(160deg, rgb(255 255 255 / 0.65), rgb(220 228 242 / 0.35) 45%, rgb(255 255 255 / 0.5));
+  border: 1px solid rgb(35 62 155 / 0.14);
+  border-top-width: 3px;
+  border-radius: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
