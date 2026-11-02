@@ -83,13 +83,13 @@ export function ListingView() {
               <dt className="text-sm text-ink-soft">Payment</dt>
               <dd className="text-lg font-semibold">{listing.openToTrades ? "Cash or trade" : "Cash only"}</dd>
             </div>
-            <div className="col-span-full">
-              <dt className="text-sm text-ink-soft">Handover</dt>
-              <dd className="text-lg font-semibold">{methodsText(listing)}</dd>
-            </div>
             <div>
               <dt className="text-sm text-ink-soft">Listed</dt>
               <dd className="text-lg font-semibold">{formatWhen(listing.createdAt)}</dd>
+            </div>
+            <div className="col-span-full">
+              <dt className="text-sm text-ink-soft">Handover</dt>
+              <dd className="text-lg font-semibold">{methodsText(listing)}</dd>
             </div>
           </dl>
 
