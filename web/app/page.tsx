@@ -1,69 +1,106 @@
-import Image from "next/image";
+const sidebarWidths = [74, 58, 82, 66, 71, 54];
+const articleWidths = [100, 97, 94, 98, 86];
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="fixed inset-0 overflow-hidden bg-[#fbfaf8] text-zinc-900">
+      <header
+        aria-hidden="true"
+        className="grid h-[76px] grid-cols-[1fr_auto_1fr] items-center border-b border-stone-200 bg-white/95 px-6 sm:px-14"
+      >
+        <div className="flex items-center gap-3">
+          <span className="h-9 w-9 rounded-full bg-stone-100" />
+          <span className="h-3.5 w-28 rounded-full bg-stone-100" />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <span className="hidden h-9 w-[min(30vw,420px)] rounded-xl bg-stone-100 sm:block" />
+        <div className="flex items-center justify-end gap-3">
+          <span className="hidden h-9 w-9 rounded-full bg-stone-100 sm:block" />
+          <span className="h-9 w-24 rounded-xl bg-stone-100" />
         </div>
-      </main>
-    </div>
+      </header>
+
+      <div
+        aria-hidden="true"
+        className="grid h-[calc(100%-76px)] grid-cols-[180px_minmax(0,1fr)_260px] gap-10 px-6 pb-24 pt-10 opacity-55 max-lg:grid-cols-[150px_minmax(0,1fr)] max-sm:grid-cols-1 sm:px-14"
+      >
+        <aside className="hidden border-r border-stone-200 pr-7 sm:block">
+          <div className="mb-6 h-2.5 w-16 rounded-full bg-stone-200" />
+          <div className="space-y-4">
+            {sidebarWidths.map((width) => (
+              <div key={width} className="flex items-center gap-3">
+                <span className="h-4 w-4 rounded bg-stone-200" />
+                <span
+                  className="h-2.5 rounded-full bg-stone-200"
+                  style={{ width: `${width}%` }}
+                />
+              </div>
+            ))}
+          </div>
+          <div className="mb-6 mt-9 h-2.5 w-24 rounded-full bg-stone-200" />
+          <div className="space-y-4">
+            {sidebarWidths.slice(0, 3).map((width) => (
+              <span
+                key={width}
+                className="block h-2.5 rounded-full bg-stone-200"
+                style={{ width: `${width}%` }}
+              />
+            ))}
+          </div>
+        </aside>
+
+        <article className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+          <div className="space-y-3">
+            <div className="h-2.5 w-28 rounded-full bg-stone-200" />
+            <div className="h-7 w-4/5 rounded-lg bg-stone-200" />
+            <div className="h-7 w-3/5 rounded-lg bg-stone-200" />
+          </div>
+          <div className="min-h-[240px] flex-1 rounded-2xl bg-stone-200" />
+          <div className="flex items-center gap-3">
+            <span className="h-9 w-9 rounded-full bg-stone-200" />
+            <span className="h-2.5 w-28 rounded-full bg-stone-200" />
+          </div>
+          <div className="space-y-2">
+            {articleWidths.map((width) => (
+              <span
+                key={width}
+                className="block h-2.5 rounded-full bg-stone-200"
+                style={{ width: `${width}%` }}
+              />
+            ))}
+          </div>
+        </article>
+
+        <aside className="space-y-5 max-lg:hidden">
+          {[0, 1].map((card) => (
+            <div
+              key={card}
+              className="space-y-4 rounded-2xl border border-stone-200 bg-white/70 p-6"
+            >
+              <span className="block h-10 w-10 rounded-full bg-stone-200" />
+              <span className="block h-3 w-3/5 rounded-full bg-stone-200" />
+              <span className="block h-2.5 w-full rounded-full bg-stone-200" />
+              <span className="block h-2.5 w-4/5 rounded-full bg-stone-200" />
+              <span className="block h-8 w-24 rounded-lg bg-stone-200" />
+            </div>
+          ))}
+        </aside>
+      </div>
+
+      <output
+        aria-live="polite"
+        aria-atomic="true"
+        className="absolute left-1/2 top-[clamp(96px,13vh,122px)] w-[min(620px,calc(100%-40px))] -translate-x-1/2 rounded-[18px] border border-stone-200 bg-white/95 px-5 py-5 shadow-[0_18px_50px_rgb(24_24_27/9%)] backdrop-blur-sm"
+      >
+        <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.09em] text-stone-500">
+          Building your site
+        </p>
+        <h1 className="text-xl font-semibold tracking-tight">
+          Your site is taking shape
+        </h1>
+        <p className="mt-1 text-sm text-stone-500">
+          Your first version will appear here automatically when it’s ready.
+        </p>
+      </output>
+    </main>
   );
 }
