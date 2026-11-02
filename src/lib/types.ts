@@ -1,3 +1,5 @@
+import type { Card } from "./card";
+
 export type User = { id: string; name: string };
 
 export const CONDITIONS = [
@@ -50,3 +52,11 @@ export type Offer = {
 };
 
 export type Result = { ok: true; id: string } | { ok: false; error: string };
+
+export type MarketData = {
+  users: Record<string, User>;
+  cards: Record<string, Card>;
+  items: Record<string, OwnedCard>;
+  listings: Record<string, Listing>;
+  offers: Record<string, Offer>;
+};

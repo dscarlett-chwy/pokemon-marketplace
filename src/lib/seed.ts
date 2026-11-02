@@ -1,6 +1,6 @@
 import type { Card } from "./card";
 import seedCards from "./seed-cards.json";
-import type { Listing, Offer, OwnedCard, User } from "./types";
+import type { Listing, MarketData, Offer, OwnedCard, User } from "./types";
 
 export const USERS: User[] = [
   { id: "ash", name: "Ash" },
@@ -101,3 +101,13 @@ export const SEED_OFFERS: Offer[] = [
     updatedAt: "2026-11-01T08:30:00Z",
   },
 ];
+
+const byId = <T extends { id: string }>(rows: T[]) => Object.fromEntries(rows.map((r) => [r.id, r]));
+
+export const seedMarket = (): MarketData => ({
+  users: byId(USERS),
+  cards: { ...SEED_CARDS },
+  items: byId(SEED_ITEMS),
+  listings: byId(SEED_LISTINGS),
+  offers: byId(SEED_OFFERS),
+});
