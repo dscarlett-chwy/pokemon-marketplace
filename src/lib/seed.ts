@@ -61,7 +61,7 @@ const ANY: ExchangeMethod[] = ["pickup", "dropoff", "ship"];
 
 export const SEED_LISTINGS: Listing[] = [
   listing("l-1", "i-ash-1", "ash", 340, true, ANY, "Pulled it myself, sleeved straight from the pack.", "2026-10-30T15:00:00Z"),
-  listing("l-2", "i-ash-5", "ash", 95, false, ["ship"], "", "2026-10-28T19:20:00Z"),
+  { ...listing("l-2", "i-ash-5", "ash", 95, false, ["ship"], "", "2026-10-28T19:20:00Z"), status: "trading" },
   listing("l-3", "i-misty-1", "misty", 235, true, ["pickup"], "Clean holo, light whitening on one corner.", "2026-10-31T13:05:00Z"),
   listing("l-4", "i-misty-2", "misty", 520, true, ["pickup", "ship"], "Unlimited print. Happy to look at vintage trades.", "2026-10-25T10:40:00Z"),
   listing("l-5", "i-misty-3", "misty", 2250, true, ["ship"], "", "2026-11-01T09:15:00Z"),
@@ -93,6 +93,7 @@ export const SEED_OFFERS: Offer[] = [
     ],
     status: "pending",
     closedReason: null,
+    trade: null,
     updatedAt: "2026-11-01T18:10:00Z",
   },
   {
@@ -115,6 +116,7 @@ export const SEED_OFFERS: Offer[] = [
     ],
     status: "pending",
     closedReason: null,
+    trade: null,
     updatedAt: "2026-11-01T20:02:00Z",
   },
   {
@@ -148,6 +150,7 @@ export const SEED_OFFERS: Offer[] = [
     ],
     status: "pending",
     closedReason: null,
+    trade: null,
     updatedAt: "2026-11-01T08:30:00Z",
   },
   {
@@ -181,7 +184,26 @@ export const SEED_OFFERS: Offer[] = [
     ],
     status: "pending",
     closedReason: null,
+    trade: null,
     updatedAt: "2026-11-02T09:20:00Z",
+  },
+  {
+    id: "o-5",
+    listingId: "l-2",
+    buyerId: "misty",
+    sellerId: "ash",
+    rounds: [
+      {
+        by: "buyer",
+        terms: { buyer: give(90), seller: give(0), exchange: { method: "ship", paidBy: "buyer" }, payment: "online" },
+        message: "$90 and I'll cover postage?",
+        at: "2026-11-01T21:15:00Z",
+      },
+    ],
+    status: "accepted",
+    closedReason: null,
+    trade: { status: "active", done: { buyer: ["pay"], seller: [] }, cancelledBy: null, startedAt: "2026-11-02T08:05:00Z" },
+    updatedAt: "2026-11-02T08:40:00Z",
   },
 ];
 

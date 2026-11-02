@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Suspense } from "react";
-import { useMarketplace, partyOf, whoseTurn } from "@/store/marketplace";
+import { needsAction, useMarketplace } from "@/store/marketplace";
 import { useHydrated } from "@/store/hydration";
 import { UserSwitcher } from "./UserSwitcher";
 
@@ -18,7 +18,7 @@ function useWaitingOnMe() {
   const offers = useMarketplace((s) => s.offers);
   const me = useMarketplace((s) => s.currentUserId);
   if (!hydrated) return 0;
-  return Object.values(offers).filter((o) => o.status === "pending" && partyOf(o, me) === whoseTurn(o)).length;
+  return Object.values(offers).filter((o) => needsAction(o, me)).length;
 }
 
 function NavLinks({ active }: { active: string | null }) {

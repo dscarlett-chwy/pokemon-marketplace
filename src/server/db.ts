@@ -14,6 +14,7 @@ import type {
   OfferRound,
   OfferStatus,
   OfferTerms,
+  Trade,
 } from "@/lib/types";
 
 const SCHEMA = `
@@ -51,6 +52,7 @@ const SCHEMA = `
     rounds TEXT NOT NULL,
     status TEXT NOT NULL,
     closed_reason TEXT,
+    trade TEXT,
     updated_at TEXT NOT NULL
   );
 `;
@@ -71,10 +73,10 @@ const UPSERT: Record<Table, string> = {
     VALUES ($id, $itemId, $sellerId, $askingPrice, $openToTrades, $exchangeMethods, $area, $note, $status, $createdAt)
     ON CONFLICT(id) DO UPDATE SET asking_price = excluded.asking_price, open_to_trades = excluded.open_to_trades,
       exchange_methods = excluded.exchange_methods, area = excluded.area, note = excluded.note, status = excluded.status`,
-  offers: `INSERT INTO offers (id, listing_id, buyer_id, seller_id, rounds, status, closed_reason, updated_at)
-    VALUES ($id, $listingId, $buyerId, $sellerId, $rounds, $status, $closedReason, $updatedAt)
+  offers: `INSERT INTO offers (id, listing_id, buyer_id, seller_id, rounds, status, closed_reason, trade, updated_at)
+    VALUES ($id, $listingId, $buyerId, $sellerId, $rounds, $status, $closedReason, $trade, $updatedAt)
     ON CONFLICT(id) DO UPDATE SET rounds = excluded.rounds, status = excluded.status,
-      closed_reason = excluded.closed_reason, updated_at = excluded.updated_at`,
+      closed_reason = excluded.closed_reason, trade = excluded.trade, updated_at = excluded.updated_at`,
 };
 
 type Params = Record<string, SQLInputValue>;
@@ -88,7 +90,11 @@ const toParams = {
     openToTrades: l.openToTrades ? 1 : 0,
     exchangeMethods: JSON.stringify(l.exchangeMethods),
   }),
-  offers: (o: MarketData["offers"][string]): Params => ({ ...o, rounds: JSON.stringify(o.rounds) }),
+  offers: (o: MarketData["offers"][string]): Params => ({
+    ...o,
+    rounds: JSON.stringify(o.rounds),
+    trade: o.trade && JSON.stringify(o.trade),
+  }),
 };
 
 type Row = Record<string, string | number | null>;
@@ -145,6 +151,20 @@ const MIGRATIONS: ((db: DatabaseSync) => void)[] = [
         return { ...round, terms: { ...terms, payment } };
       });
       update.run({ id: r.id, rounds: JSON.stringify(paid) });
+    }
+  },
+  (db) => {
+    if (!columns(db, "offers").includes("trade")) db.exec("ALTER TABLE offers ADD COLUMN trade TEXT");
+    // Offers accepted before trades existed already moved their cards, so they count as finished trades.
+    const update = db.prepare("UPDATE offers SET trade = $trade WHERE id = $id");
+    for (const r of all(db, "SELECT id, updated_at FROM offers WHERE status = 'accepted' AND trade IS NULL")) {
+      const trade: Trade = {
+        status: "complete",
+        done: { buyer: [], seller: [] },
+        cancelledBy: null,
+        startedAt: r.updated_at as string,
+      };
+      update.run({ id: r.id, trade: JSON.stringify(trade) });
     }
   },
 ];
@@ -233,6 +253,7 @@ export function readMarket(db: DatabaseSync): MarketData {
       rounds: JSON.parse(r.rounds as string) as OfferRound[],
       status: r.status as OfferStatus,
       closedReason: r.closed_reason as string | null,
+      trade: r.trade === null ? null : (JSON.parse(r.trade as string) as Trade),
       updatedAt: r.updated_at as string,
     };
   }

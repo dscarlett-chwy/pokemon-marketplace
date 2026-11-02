@@ -44,6 +44,14 @@ export async function declineOffer(offerId: unknown) {
   return synced(market.declineOffer(await getViewer(), offerId));
 }
 
+export async function completeStep(offerId: unknown, step: unknown) {
+  return synced(market.completeStep(await getViewer(), offerId, step));
+}
+
+export async function cancelTrade(offerId: unknown) {
+  return synced(market.cancelTrade(await getViewer(), offerId));
+}
+
 export async function resetDemo() {
   market.resetDemo();
   const first = Object.keys(market.loadMarket().users)[0];

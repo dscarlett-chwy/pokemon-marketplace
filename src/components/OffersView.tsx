@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import { METHOD_LABELS } from "@/lib/exchange";
 import type { Offer, Party } from "@/lib/types";
 import { useHydrated } from "@/store/hydration";
-import { latestTerms, partyOf, useMarketplace, whoseTurn } from "@/store/marketplace";
+import { latestTerms, needsAction, partyOf, useMarketplace } from "@/store/marketplace";
 import { CardImage } from "./CardImage";
 import { OfferThread } from "./OfferThread";
 import { termsText } from "./TermsSummary";
@@ -16,8 +16,19 @@ const TABS: { party: Party; label: string }[] = [
 ];
 
 function rank(offer: Offer, me: string) {
-  if (offer.status !== "pending") return 2;
-  return partyOf(offer, me) === whoseTurn(offer) ? 0 : 1;
+  if (needsAction(offer, me)) return 0;
+  return offer.status === "pending" || offer.trade?.status === "active" ? 1 : 2;
+}
+
+function statusLabel(offer: Offer, r: number, otherName: string) {
+  if (offer.trade) {
+    if (offer.trade.status === "complete") return "Complete";
+    if (offer.trade.status === "cancelled") return "Cancelled";
+    return r === 0 ? "Your step" : `Waiting on ${otherName}`;
+  }
+  if (offer.status === "declined") return "Declined";
+  if (offer.status === "closed") return "Closed";
+  return r === 0 ? "Your turn" : `Waiting on ${otherName}`;
 }
 
 export function OffersView() {
@@ -103,16 +114,7 @@ export function OffersView() {
                 const r = rank(offer, me);
                 const terms = latestTerms(offer);
                 const nameFor = (p: Party) => (p === tab ? "You" : other.name);
-                const status =
-                  offer.status === "accepted"
-                    ? "Accepted"
-                    : offer.status === "declined"
-                      ? "Declined"
-                      : offer.status === "closed"
-                        ? "Closed"
-                        : r === 0
-                          ? "Your turn"
-                          : `Waiting on ${other.name}`;
+                const status = statusLabel(offer, r, other.name);
                 const current = active?.id === offer.id;
                 return (
                   <li key={offer.id}>
@@ -138,9 +140,9 @@ export function OffersView() {
                         className={`shrink-0 rounded-full px-2.5 py-0.5 text-sm font-semibold ${
                           r === 0
                             ? "bg-frame text-ink"
-                            : offer.status === "accepted"
+                            : offer.trade?.status === "complete"
                               ? "text-accept"
-                              : offer.status === "declined"
+                              : offer.status === "declined" || offer.trade?.status === "cancelled"
                                 ? "text-decline"
                                 : "text-ink-soft"
                         }`}

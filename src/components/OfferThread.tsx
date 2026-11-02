@@ -9,6 +9,7 @@ import { latestTerms, partyOf, useMarketplace, whoseTurn } from "@/store/marketp
 import { useNotice } from "@/store/notice";
 import { CardImage } from "./CardImage";
 import { OfferForm } from "./OfferForm";
+import { TradeChecklist } from "./TradeChecklist";
 import { paymentText, sellerGivesText, sideText, termsText, TermsSummary } from "./TermsSummary";
 
 type Mode = "idle" | "confirm-accept" | "confirm-decline" | "counter";
@@ -36,7 +37,6 @@ export function OfferThread({ offer }: { offer: Offer }) {
     return id === me ? "You" : users[id].name;
   };
   const handover = exchangePhrase(terms.exchange, listing.area, nameFor);
-  const meetup = terms.exchange.method === "ship" ? "" : terms.exchange.meetup;
   const payment = paymentText(terms, nameFor);
 
   const run = (action: () => { ok: boolean; error?: string }, done: string) => {
@@ -94,16 +94,8 @@ export function OfferThread({ offer }: { offer: Offer }) {
       </ol>
 
       <section aria-live="polite" className="rounded-lg border border-rule bg-sheet p-5">
-        {offer.status === "accepted" ? (
-          <>
-            <p className="font-display text-xl font-bold text-accept">
-              Trade complete for {termsText(terms, nameFor)}, {handover}.{" "}
-              <span className="font-sans text-base font-normal text-ink">
-                {myParty === "buyer" ? `${card.name} is now in your cards.` : `${card.name} went to ${other.name}.`}
-              </span>
-            </p>
-            {meetup && <p className="mt-1">Meetup: {meetup}</p>}
-          </>
+        {offer.trade ? (
+          <TradeChecklist offer={{ ...offer, trade: offer.trade }} listing={listing} card={card} nameFor={nameFor} />
         ) : offer.status === "declined" ? (
           <p className="font-display text-xl font-bold text-decline">
             {nameFor(whoseTurn(offer))} declined this offer.
@@ -143,16 +135,13 @@ export function OfferThread({ offer }: { offer: Offer }) {
                 ? `Give ${sellerGivesText(card.name, terms.seller)} to ${other.name} for ${sideText(terms.buyer)}, ${handover}?`
                 : `Give ${sideText(terms.buyer)} for ${sellerGivesText(card.name, terms.seller)}, ${handover}?`}{" "}
               {payment && `${payment}.`}{" "}
-              This completes the trade and moves the cards.
+              You&apos;ll both get a checklist, and cards change owners once each of you confirms you got your side.
             </p>
             <div className="flex flex-wrap gap-3">
               <button
                 type="button"
                 onClick={() =>
-                  run(
-                    () => acceptOffer(offer.id),
-                    myParty === "buyer" ? `Trade complete. ${card.name} is in your cards` : `Trade complete. You sold ${card.name}`,
-                  )
+                  run(() => acceptOffer(offer.id), "Offer accepted. Work through the checklist to finish the trade")
                 }
                 className="rounded-md bg-accept px-5 py-3 font-bold text-white hover:brightness-95"
               >

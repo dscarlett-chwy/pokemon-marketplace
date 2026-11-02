@@ -5,15 +5,18 @@ import * as server from "@/app/actions";
 import type { Card } from "@/lib/card";
 import * as rules from "@/lib/marketplace-rules";
 import { seedMarket, USERS } from "@/lib/seed";
-import type { Condition, MarketData, OfferTerms, Result } from "@/lib/types";
+import type { Condition, MarketData, OfferTerms, Result, TradeStep } from "@/lib/types";
 import { useNotice } from "./notice";
 
 export {
   activeListingForItem,
   latestTerms,
+  lockedItems,
+  needsAction,
   offeredItemIds,
   partyOf,
   tradeableItems,
+  tradeSteps,
   whoseTurn,
 } from "@/lib/marketplace-rules";
 
@@ -29,6 +32,8 @@ type Actions = {
   counterOffer: (offerId: string, terms: OfferTerms, message: string) => Result;
   acceptOffer: (offerId: string) => Result;
   declineOffer: (offerId: string) => Result;
+  completeStep: (offerId: string, step: TradeStep) => Result;
+  cancelTrade: (offerId: string) => Result;
   resetDemo: () => void;
 };
 
@@ -146,6 +151,18 @@ export const useMarketplace = create<MarketplaceState>()((set, get) => {
       run(
         (m, me) => rules.declineOffer(m, me, offerId),
         () => server.declineOffer(offerId),
+      ),
+
+    completeStep: (offerId, step) =>
+      run(
+        (m, me) => rules.completeStep(m, me, offerId, step),
+        () => server.completeStep(offerId, step),
+      ),
+
+    cancelTrade: (offerId) =>
+      run(
+        (m, me) => rules.cancelTrade(m, me, offerId),
+        () => server.cancelTrade(offerId),
       ),
 
     resetDemo: () => {

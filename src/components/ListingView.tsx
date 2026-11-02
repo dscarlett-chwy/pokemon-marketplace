@@ -17,6 +17,7 @@ export function ListingView() {
   const hydrated = useHydrated();
   const me = useMarketplace((s) => s.currentUserId);
   const offers = useMarketplace((s) => s.offers);
+  const users = useMarketplace((s) => s.users);
   const makeOffer = useMarketplace((s) => s.makeOffer);
   const withdrawListing = useMarketplace((s) => s.withdrawListing);
   const show = useNotice((s) => s.show);
@@ -39,6 +40,7 @@ export function ListingView() {
   const listingOffers = Object.values(offers).filter((o) => o.listingId === listing.id);
   const myOpenOffer = listingOffers.find((o) => o.buyerId === me && o.status === "pending");
   const openOfferCount = listingOffers.filter((o) => o.status === "pending").length;
+  const myTrade = listingOffers.find((o) => o.trade?.status === "active" && (o.buyerId === me || o.sellerId === me));
 
   return (
     <div className="space-y-6">
@@ -101,7 +103,34 @@ export function ListingView() {
           )}
 
           <section aria-labelledby="action-heading" className="rounded-lg border border-rule bg-sheet p-5">
-            {listing.status !== "active" ? (
+            {listing.status === "trading" ? (
+              <>
+                <h2 id="action-heading" className="font-display text-xl font-bold">
+                  This card is in a trade
+                </h2>
+                {myTrade ? (
+                  <>
+                    <p className="mt-1">
+                      You and {isMine ? users[myTrade.buyerId].name : seller.name} agreed on a trade for it. It stays{" "}
+                      {isMine ? "yours" : `${seller.name}'s`} until you both confirm you got your side.
+                    </p>
+                    <Link
+                      href={`/offers?offer=${myTrade.id}`}
+                      className="mt-2 inline-block font-semibold text-cardback underline underline-offset-4"
+                    >
+                      View trade
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <p className="mt-1">{seller.name} is trading it with another collector. It comes back on sale if that trade is cancelled.</p>
+                    <Link href="/" className="mt-2 inline-block font-semibold text-cardback underline underline-offset-4">
+                      Find another card
+                    </Link>
+                  </>
+                )}
+              </>
+            ) : listing.status !== "active" ? (
               <>
                 <h2 id="action-heading" className="font-display text-xl font-bold">
                   {listing.status === "sold" ? "This card has been sold" : "This card is no longer for sale"}

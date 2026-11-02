@@ -19,7 +19,8 @@ export type OwnedCard = {
   condition: Condition;
 };
 
-export type ListingStatus = "active" | "sold" | "withdrawn";
+/** "trading" means an accepted offer is being carried out; the listing reopens if that trade is cancelled. */
+export type ListingStatus = "active" | "trading" | "sold" | "withdrawn";
 
 export const EXCHANGE_METHODS = ["pickup", "dropoff", "ship"] as const;
 export type ExchangeMethod = (typeof EXCHANGE_METHODS)[number];
@@ -57,6 +58,19 @@ export type OfferRound = { by: Party; terms: OfferTerms; message: string; at: st
 
 export type OfferStatus = "pending" | "accepted" | "declined" | "closed";
 
+export const TRADE_STEPS = ["pay", "send", "receive"] as const;
+/** "send" covers shipping or handing over cards, plus cash when paying in person. */
+export type TradeStep = (typeof TRADE_STEPS)[number];
+
+export type TradeStatus = "active" | "complete" | "cancelled";
+
+export type Trade = {
+  status: TradeStatus;
+  done: Record<Party, TradeStep[]>;
+  cancelledBy: Party | null;
+  startedAt: string;
+};
+
 export type Offer = {
   id: string;
   listingId: string;
@@ -65,6 +79,8 @@ export type Offer = {
   rounds: OfferRound[];
   status: OfferStatus;
   closedReason: string | null;
+  /** Set when the offer is accepted. Cards change owners only when the trade completes. */
+  trade: Trade | null;
   updatedAt: string;
 };
 

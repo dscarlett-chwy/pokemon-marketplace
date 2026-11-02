@@ -12,6 +12,8 @@ import {
   type PaymentMethod,
   type Result,
   type Side,
+  type Trade,
+  type TradeStep,
 } from "./types";
 
 /**
@@ -49,11 +51,67 @@ export function activeListingForItem(listings: Record<string, Listing>, itemId: 
   return Object.values(listings).find((l) => l.itemId === itemId && l.status === "active");
 }
 
-/** Cards a collector could put into an offer: owned and not up for sale. */
-export function tradeableItems(data: Pick<MarketData, "items" | "listings">, userId: string) {
+/** Cards held by trades in progress, mapped to the offer that holds them. */
+export function lockedItems(data: Pick<MarketData, "listings" | "offers">) {
+  const locked = new Map<string, string>();
+  for (const o of Object.values(data.offers)) {
+    if (o.trade?.status !== "active") continue;
+    for (const id of tradedItemIds(data.listings[o.listingId], latestTerms(o))) locked.set(id, o.id);
+  }
+  return locked;
+}
+
+/** Cards a collector could put into an offer: owned, not up for sale, and not in a trade. */
+export function tradeableItems(data: Pick<MarketData, "items" | "listings" | "offers">, userId: string) {
+  const locked = lockedItems(data);
   return Object.values(data.items).filter(
-    (i) => i.ownerId === userId && !activeListingForItem(data.listings, i.id),
+    (i) => i.ownerId === userId && !activeListingForItem(data.listings, i.id) && !locked.has(i.id),
   );
+}
+
+const other = (party: Party): Party => (party === "buyer" ? "seller" : "buyer");
+
+export type StepState = { party: Party; step: TradeStep; done: boolean; ready: boolean };
+
+/**
+ * The checklist for an accepted offer. Whoever pays online pays first, and the other side sends
+ * only once the money is held. Each side confirms receipt after the other side has sent.
+ */
+export function tradeSteps(offer: Offer): StepState[] {
+  const { trade } = offer;
+  if (!trade) return [];
+  const terms = latestTerms(offer);
+  const pays = payer(terms);
+  const plan: Record<Party, TradeStep[]> = { buyer: [], seller: [] };
+  for (const party of ["buyer", "seller"] as const) {
+    const paying = pays?.party === party;
+    if (paying && terms.payment === "online") plan[party].push("pay");
+    if (party === "seller" || terms.buyer.itemIds.length > 0 || (paying && terms.payment === "in_person")) {
+      plan[party].push("send");
+    }
+  }
+  for (const party of ["buyer", "seller"] as const) {
+    if (plan[other(party)].includes("send")) plan[party].push("receive");
+  }
+  const isDone = (party: Party, step: TradeStep) => trade.status === "complete" || trade.done[party].includes(step);
+  const isReady = (party: Party, step: TradeStep) => {
+    const them = other(party);
+    if (step === "send") return !plan[them].includes("pay") || isDone(them, "pay");
+    if (step === "receive") return isDone(them, "send");
+    return true;
+  };
+  return (["buyer", "seller"] as const).flatMap((party) =>
+    plan[party].map((step) => ({ party, step, done: isDone(party, step), ready: isReady(party, step) })),
+  );
+}
+
+/** True when the collector has to reply to an offer or has a trade step they can do now. */
+export function needsAction(offer: Offer, userId: string) {
+  const party = partyOf(offer, userId);
+  if (!party) return false;
+  if (offer.status === "pending") return whoseTurn(offer) === party;
+  if (offer.trade?.status !== "active") return false;
+  return tradeSteps(offer).some((s) => s.party === party && s.ready && !s.done);
 }
 
 function checkSide(m: MarketData, userId: string, side: Side): string | null {
@@ -158,6 +216,7 @@ export function createListing(m: MarketData, me: string, input: ListingInput, id
   const item = m.items[itemId];
   if (!item || item.ownerId !== me) return fail(m, "You can only list cards you own.");
   if (activeListingForItem(m.listings, itemId)) return fail(m, "This card is already listed.");
+  if (lockedItems(m).has(itemId)) return fail(m, "This card is in a trade. You can list it if the trade is cancelled.");
   if (!Number.isFinite(askingPrice) || askingPrice <= 0) return fail(m, "Set an asking price above $0.");
   if (exchangeMethods.length === 0) return fail(m, "Pick at least one way to hand over the card.");
   if (meetsInPerson(exchangeMethods) && !area) return fail(m, "Add your area so buyers know where to meet.");
@@ -181,6 +240,7 @@ export function createListing(m: MarketData, me: string, input: ListingInput, id
 export function withdrawListing(m: MarketData, me: string, listingId: string): Outcome {
   const listing = m.listings[listingId];
   if (!listing || listing.sellerId !== me) return fail(m, "You can only remove your own listings.");
+  if (listing.status === "trading") return fail(m, "This card is in a trade. Cancel the trade first to remove the listing.");
   if (listing.status !== "active") return fail(m, "This listing is already closed.");
   const now = new Date().toISOString();
   const offers = { ...m.offers };
@@ -201,6 +261,7 @@ export function makeOffer(
   id: string,
 ): Outcome {
   const listing = m.listings[listingId];
+  if (listing?.status === "trading") return fail(m, "This card is in a trade with another collector.");
   if (!listing || listing.status !== "active") return fail(m, "This card is no longer for sale.");
   if (listing.sellerId === me) return fail(m, "You can't make an offer on your own listing.");
   const open = Object.values(m.offers).find(
@@ -220,6 +281,7 @@ export function makeOffer(
     rounds: [{ by: "buyer", terms, message: message.trim(), at: now }],
     status: "pending",
     closedReason: null,
+    trade: null,
     updatedAt: now,
   };
   return done({ ...m, offers: { ...m.offers, [id]: offer } }, id);
@@ -250,22 +312,75 @@ export function acceptOffer(m: MarketData, me: string, offerId: string): Outcome
   if (problem) return fail(m, problem);
 
   const now = new Date().toISOString();
-  const items = { ...m.items };
-  for (const id of [listing.itemId, ...terms.seller.itemIds]) items[id] = { ...items[id], ownerId: offer.buyerId };
-  for (const id of terms.buyer.itemIds) items[id] = { ...items[id], ownerId: offer.sellerId };
-
-  const moved = new Set(tradedItemIds(listing, terms));
-  const offers = { ...m.offers, [offerId]: { ...offer, status: "accepted" as const, updatedAt: now } };
+  const trade: Trade = { status: "active", done: { buyer: [], seller: [] }, cancelledBy: null, startedAt: now };
+  const held = new Set(tradedItemIds(listing, terms));
+  const offers = { ...m.offers, [offerId]: { ...offer, status: "accepted" as const, trade, updatedAt: now } };
   for (const o of Object.values(offers)) {
     if (o.id === offerId || o.status !== "pending") continue;
     if (o.listingId === listing.id) {
-      offers[o.id] = { ...o, status: "closed", closedReason: "The card was sold to another collector.", updatedAt: now };
-    } else if (offeredItemIds(latestTerms(o)).some((id) => moved.has(id))) {
-      offers[o.id] = { ...o, status: "closed", closedReason: "A card in this offer was traded away.", updatedAt: now };
+      offers[o.id] = { ...o, status: "closed", closedReason: "The card went into a trade with another collector.", updatedAt: now };
+    } else if (tradedItemIds(m.listings[o.listingId], latestTerms(o)).some((id) => held.has(id))) {
+      offers[o.id] = { ...o, status: "closed", closedReason: "A card in this offer went into another trade.", updatedAt: now };
     }
   }
 
-  return done({ ...m, items, offers, listings: { ...m.listings, [listing.id]: { ...listing, status: "sold" } } }, offerId);
+  return done({ ...m, offers, listings: { ...m.listings, [listing.id]: { ...listing, status: "trading" } } }, offerId);
+}
+
+function inTrade(m: MarketData, me: string, offerId: string): { offer: Offer & { trade: Trade }; party: Party } | string {
+  const offer = m.offers[offerId];
+  const party = offer && partyOf(offer, me);
+  if (!offer?.trade || !party) return "That trade no longer exists.";
+  if (offer.trade.status !== "active") return "This trade is already finished.";
+  return { offer: offer as Offer & { trade: Trade }, party };
+}
+
+/** Ticks off one of my steps. The last step completes the trade: cards change owners and the listing is sold. */
+export function completeStep(m: MarketData, me: string, offerId: string, step: TradeStep): Outcome {
+  const ctx = inTrade(m, me, offerId);
+  if (typeof ctx === "string") return fail(m, ctx);
+  const { offer, party } = ctx;
+  const state = tradeSteps(offer).find((s) => s.party === party && s.step === step);
+  if (!state) return fail(m, "That step isn't part of this trade.");
+  if (state.done) return fail(m, "You already did this step.");
+  if (!state.ready) return fail(m, "The other collector has a step to finish first.");
+
+  const now = new Date().toISOString();
+  const trade: Trade = { ...offer.trade, done: { ...offer.trade.done, [party]: [...offer.trade.done[party], step] } };
+  const updated: Offer = { ...offer, trade, updatedAt: now };
+  if (!tradeSteps(updated).every((s) => s.done)) return done({ ...m, offers: { ...m.offers, [offerId]: updated } }, offerId);
+
+  const listing = m.listings[offer.listingId];
+  const terms = latestTerms(offer);
+  const items = { ...m.items };
+  for (const id of [listing.itemId, ...terms.seller.itemIds]) items[id] = { ...items[id], ownerId: offer.buyerId };
+  for (const id of terms.buyer.itemIds) items[id] = { ...items[id], ownerId: offer.sellerId };
+  return done(
+    {
+      ...m,
+      items,
+      offers: { ...m.offers, [offerId]: { ...updated, trade: { ...trade, status: "complete" } } },
+      listings: { ...m.listings, [listing.id]: { ...listing, status: "sold" } },
+    },
+    offerId,
+  );
+}
+
+/** Either side can back out before the end. Held money is refunded, cards stay put, and the listing reopens. */
+export function cancelTrade(m: MarketData, me: string, offerId: string): Outcome {
+  const ctx = inTrade(m, me, offerId);
+  if (typeof ctx === "string") return fail(m, ctx);
+  const { offer, party } = ctx;
+  const listing = m.listings[offer.listingId];
+  const trade: Trade = { ...offer.trade, status: "cancelled", cancelledBy: party };
+  return done(
+    {
+      ...m,
+      offers: { ...m.offers, [offerId]: { ...offer, trade, updatedAt: new Date().toISOString() } },
+      listings: { ...m.listings, [listing.id]: { ...listing, status: "active" } },
+    },
+    offerId,
+  );
 }
 
 export function declineOffer(m: MarketData, me: string, offerId: string): Outcome {

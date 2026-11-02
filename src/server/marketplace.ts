@@ -6,6 +6,7 @@ import {
   CONDITIONS,
   EXCHANGE_METHODS,
   PAYMENT_METHODS,
+  TRADE_STEPS,
   type Condition,
   type Exchange,
   type ExchangeMethod,
@@ -13,6 +14,7 @@ import {
   type OfferTerms,
   type Result,
   type Side,
+  type TradeStep,
 } from "@/lib/types";
 import { getDb, readMarket, resetMarket, transaction, writeChanges } from "./db";
 
@@ -136,6 +138,16 @@ export function acceptOffer(me: string, offerId: unknown): Result {
 export function declineOffer(me: string, offerId: unknown): Result {
   if (!isRef(offerId)) return INVALID;
   return apply(me, (m) => rules.declineOffer(m, me, offerId));
+}
+
+export function completeStep(me: string, offerId: unknown, step: unknown): Result {
+  if (!isRef(offerId) || !TRADE_STEPS.includes(step as TradeStep)) return INVALID;
+  return apply(me, (m) => rules.completeStep(m, me, offerId, step as TradeStep));
+}
+
+export function cancelTrade(me: string, offerId: unknown): Result {
+  if (!isRef(offerId)) return INVALID;
+  return apply(me, (m) => rules.cancelTrade(m, me, offerId));
 }
 
 export function resetDemo() {

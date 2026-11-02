@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { formatMoney } from "@/lib/format";
 import { useHydrated } from "@/store/hydration";
-import { activeListingForItem, latestTerms, offeredItemIds, useMarketplace } from "@/store/marketplace";
+import { activeListingForItem, latestTerms, lockedItems, offeredItemIds, useMarketplace } from "@/store/marketplace";
 import { AddCardPanel } from "./AddCardPanel";
 import { CardImage } from "./CardImage";
 import { ListCardDialog } from "./ListCardDialog";
@@ -25,6 +25,7 @@ export function InventoryView() {
     () => new Set(Object.values(offers).filter((o) => o.status === "pending").flatMap((o) => offeredItemIds(latestTerms(o)))),
     [offers],
   );
+  const locked = useMemo(() => lockedItems({ listings, offers }), [listings, offers]);
   const listingItem = listingItemId ? items[listingItemId] : null;
 
   if (!hydrated) return <p className="text-ink-soft">Opening the binder…</p>;
@@ -69,7 +70,15 @@ export function InventoryView() {
                     {card.set.name} #{card.number}, {item.condition}
                   </p>
                   <div className="mt-3 flex-1 content-end">
-                    {listing ? (
+                    {locked.has(item.id) ? (
+                      <Link
+                        href={`/offers?offer=${locked.get(item.id)}`}
+                        className="inline-flex items-center gap-2 font-semibold text-cardback underline underline-offset-4"
+                      >
+                        <span aria-hidden className="size-2.5 rounded-full bg-frame ring-2 ring-frame/40" />
+                        In a trade
+                      </Link>
+                    ) : listing ? (
                       <Link
                         href={`/listings/${listing.id}`}
                         className="tabular font-semibold text-cardback underline underline-offset-4"

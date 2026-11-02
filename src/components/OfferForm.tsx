@@ -45,14 +45,20 @@ function CashInput({ value, onChange }: { value: string; onChange: (value: strin
 function CardPicker({ ownerId, picked, onToggle }: { ownerId: string; picked: string[]; onToggle: (id: string) => void }) {
   const items = useMarketplace((s) => s.items);
   const listings = useMarketplace((s) => s.listings);
+  const offers = useMarketplace((s) => s.offers);
   const cards = useMarketplace((s) => s.cards);
-  const tradeable = useMemo(() => tradeableItems({ items, listings }, ownerId), [items, listings, ownerId]);
+  const tradeable = useMemo(
+    () => tradeableItems({ items, listings, offers }, ownerId),
+    [items, listings, offers, ownerId],
+  );
 
   return (
     <fieldset>
       <legend className="text-sm font-semibold">Cards</legend>
       {tradeable.length === 0 ? (
-        <p className="mt-1 text-ink-soft">No cards available to trade. Cards that are listed for sale can&apos;t be traded.</p>
+        <p className="mt-1 text-ink-soft">
+          No cards available to trade. Cards that are listed for sale or already in a trade can&apos;t be added.
+        </p>
       ) : (
         <ul className="mt-1 grid grid-cols-3 gap-2 sm:grid-cols-4">
           {tradeable.map((item) => {
