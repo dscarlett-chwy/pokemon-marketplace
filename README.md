@@ -1,36 +1,39 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Trade Binder
 
-## Getting Started
+A Pokemon card marketplace where collectors list cards, make offers in cash or cards, and counter until they agree.
 
-First, run the development server:
+## Run it locally
+
+Needs Node 24 or newer.
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Data
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Everything is stored in a single SQLite file using Node's built-in `node:sqlite`, so there is no database server to install.
 
-## Learn More
+- The file lives at `data/marketplace.db` by default (gitignored). Set `DATABASE_PATH` to put it somewhere else.
+- On first start the tables are created and filled with the demo collectors, cards, listings and offers.
+- To start over, use **Reset demo data** in the footer, or stop the server and delete the `data` folder.
 
-To learn more about Next.js, take a look at the following resources:
+There is no sign-in yet: the "Viewing as" switcher picks which collector you act as, and anyone with the link can act as either one.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deploy to Railway
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The database is a file, so the app needs a host with a persistent disk. Serverless hosts like Vercel lose the file between requests.
 
-## Deploy on Vercel
+1. Sign in at [railway.com](https://railway.com) with GitHub and create a project with **Deploy from GitHub repo**, picking this repo.
+2. In the service, open **Settings > Volumes** (or right-click the service and choose **Attach volume**) and mount a volume at `/data`.
+3. In **Variables**, add `DATABASE_PATH` = `/data/marketplace.db`.
+4. In **Settings > Networking**, click **Generate Domain** to get a public URL.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Railway builds with `npm run build`, starts with `npm start`, and picks Node from `engines` in `package.json`. Every push to the main branch redeploys, and the data on the volume carries over.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Keep the app at one replica: SQLite expects a single server writing to the file.
+
+Optional: set `POKEMONTCG_API_KEY` to raise the card catalog's rate limit.
