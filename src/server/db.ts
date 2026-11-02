@@ -4,7 +4,7 @@ import { dirname, resolve } from "node:path";
 import { DatabaseSync, type SQLInputValue } from "node:sqlite";
 import type { Card } from "@/lib/card";
 import { seedMarket } from "@/lib/seed";
-import type { Condition, ExchangeMethod, ListingStatus, MarketData, OfferRound, OfferStatus } from "@/lib/types";
+import type { Condition, Exchange, ExchangeMethod, ListingStatus, MarketData, OfferRound, OfferStatus } from "@/lib/types";
 
 const SCHEMA = `
   CREATE TABLE IF NOT EXISTS users (
@@ -94,6 +94,22 @@ const MIGRATIONS: ((db: DatabaseSync) => void)[] = [
       ALTER TABLE listings ADD COLUMN exchange_methods TEXT NOT NULL DEFAULT '["pickup","dropoff","ship"]';
       ALTER TABLE listings ADD COLUMN area TEXT NOT NULL DEFAULT '';
     `);
+  },
+  (db) => {
+    const allowed = new Map(
+      all(db, "SELECT id, exchange_methods FROM listings").map((r) => [r.id, JSON.parse(r.exchange_methods as string)]),
+    );
+    const update = db.prepare("UPDATE offers SET rounds = $rounds WHERE id = $id");
+    for (const r of all(db, "SELECT id, listing_id, rounds FROM offers")) {
+      const rounds = JSON.parse(r.rounds as string) as OfferRound[];
+      if (rounds.every((round) => round.terms.exchange)) continue;
+      const methods = (allowed.get(r.listing_id) ?? ["ship"]) as ExchangeMethod[];
+      const fallback: Exchange = methods.includes("ship")
+        ? { method: "ship", paidBy: "buyer" }
+        : { method: methods[0] as "pickup" | "dropoff", meetup: "" };
+      const filled = rounds.map((round) => ({ ...round, terms: { ...round.terms, exchange: round.terms.exchange ?? fallback } }));
+      update.run({ id: r.id, rounds: JSON.stringify(filled) });
+    }
   },
 ];
 

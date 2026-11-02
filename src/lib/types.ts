@@ -38,9 +38,12 @@ export type Listing = {
   createdAt: string;
 };
 
-export type OfferTerms = { cash: number; itemIds: string[] };
-
 export type Party = "buyer" | "seller";
+
+/** For pickup and drop-off, `meetup` is the proposed spot and time. */
+export type Exchange = { method: "pickup" | "dropoff"; meetup: string } | { method: "ship"; paidBy: Party };
+
+export type OfferTerms = { cash: number; itemIds: string[]; exchange: Exchange };
 
 export type OfferRound = { by: Party; terms: OfferTerms; message: string; at: string };
 

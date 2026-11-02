@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
+import { METHOD_LABELS } from "@/lib/exchange";
 import type { Offer, Party } from "@/lib/types";
 import { useHydrated } from "@/store/hydration";
 import { latestTerms, partyOf, useMarketplace, whoseTurn } from "@/store/marketplace";
@@ -100,6 +101,7 @@ export function OffersView() {
                 const card = cards[item.cardId];
                 const other = users[tab === "seller" ? offer.buyerId : offer.sellerId];
                 const r = rank(offer, me);
+                const terms = latestTerms(offer);
                 const status =
                   offer.status === "accepted"
                     ? "Accepted"
@@ -127,7 +129,8 @@ export function OffersView() {
                       <span className="min-w-0 flex-1">
                         <span className="block truncate font-display font-bold">{card.name}</span>
                         <span className="block truncate text-sm text-ink-soft">
-                          {tab === "seller" ? `From ${other.name}` : `To ${other.name}`}, {termsText(latestTerms(offer))}
+                          {tab === "seller" ? `From ${other.name}` : `To ${other.name}`}, {termsText(terms)},{" "}
+                          {METHOD_LABELS[terms.exchange.method].toLowerCase()}
                         </span>
                       </span>
                       <span

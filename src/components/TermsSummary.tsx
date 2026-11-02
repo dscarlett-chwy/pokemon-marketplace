@@ -1,7 +1,8 @@
 "use client";
 
+import { exchangeLabel } from "@/lib/exchange";
 import { formatMoney } from "@/lib/format";
-import type { OfferTerms } from "@/lib/types";
+import type { OfferTerms, Party } from "@/lib/types";
 import { useMarketplace } from "@/store/marketplace";
 import { CardImage } from "./CardImage";
 
@@ -12,13 +13,26 @@ export function termsText(terms: OfferTerms) {
   return `${formatMoney(terms.cash)} + ${cards}`;
 }
 
-export function TermsSummary({ terms }: { terms: OfferTerms }) {
+export function TermsSummary({
+  terms,
+  area,
+  nameFor,
+}: {
+  terms: OfferTerms;
+  area: string;
+  nameFor: (party: Party) => string;
+}) {
   const items = useMarketplace((s) => s.items);
   const cards = useMarketplace((s) => s.cards);
+  const { exchange } = terms;
 
   return (
     <div className="space-y-2">
-      <p className="tabular font-display text-xl font-bold">{termsText(terms)}</p>
+      <div>
+        <p className="tabular font-display text-xl font-bold">{termsText(terms)}</p>
+        <p className="font-semibold">{exchangeLabel(exchange, area, nameFor)}</p>
+        {exchange.method !== "ship" && exchange.meetup && <p className="text-ink-soft">Meetup: {exchange.meetup}</p>}
+      </div>
       {terms.itemIds.length > 0 && (
         <ul className="flex flex-wrap gap-2">
           {terms.itemIds.map((id) => {

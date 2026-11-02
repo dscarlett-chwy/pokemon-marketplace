@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { exchangePhrase } from "@/lib/exchange";
 import { formatMoney, formatWhen } from "@/lib/format";
 import type { Offer } from "@/lib/types";
 import { latestTerms, partyOf, useMarketplace, whoseTurn } from "@/store/marketplace";
@@ -34,6 +35,8 @@ export function OfferThread({ offer }: { offer: Offer }) {
     const id = by === "buyer" ? offer.buyerId : offer.sellerId;
     return id === me ? "You" : users[id].name;
   };
+  const handover = exchangePhrase(terms.exchange, listing.area, nameFor);
+  const meetup = terms.exchange.method === "ship" ? "" : terms.exchange.meetup;
 
   const run = (action: () => { ok: boolean; error?: string }, done: string) => {
     const result = action();
@@ -81,7 +84,7 @@ export function OfferThread({ offer }: { offer: Offer }) {
                 , {formatWhen(round.at)}
               </p>
               <div className="mt-2">
-                <TermsSummary terms={round.terms} />
+                <TermsSummary terms={round.terms} area={listing.area} nameFor={nameFor} />
               </div>
               {round.message && <p className="mt-2 text-base">&ldquo;{round.message}&rdquo;</p>}
             </li>
@@ -91,12 +94,15 @@ export function OfferThread({ offer }: { offer: Offer }) {
 
       <section aria-live="polite" className="rounded-lg border border-rule bg-sheet p-5">
         {offer.status === "accepted" ? (
-          <p className="font-display text-xl font-bold text-accept">
-            Trade complete for {termsText(terms)}.{" "}
-            <span className="font-sans text-base font-normal text-ink">
-              {myParty === "buyer" ? `${card.name} is now in your cards.` : `${card.name} went to ${other.name}.`}
-            </span>
-          </p>
+          <>
+            <p className="font-display text-xl font-bold text-accept">
+              Trade complete for {termsText(terms)}, {handover}.{" "}
+              <span className="font-sans text-base font-normal text-ink">
+                {myParty === "buyer" ? `${card.name} is now in your cards.` : `${card.name} went to ${other.name}.`}
+              </span>
+            </p>
+            {meetup && <p className="mt-1">Meetup: {meetup}</p>}
+          </>
         ) : offer.status === "declined" ? (
           <p className="font-display text-xl font-bold text-decline">
             {nameFor(whoseTurn(offer))} declined this offer.
@@ -107,7 +113,7 @@ export function OfferThread({ offer }: { offer: Offer }) {
           </p>
         ) : !myTurn ? (
           <p className="text-lg">
-            Waiting on {other.name} to accept, decline, or counter {termsText(terms)}.
+            Waiting on {other.name} to accept, decline, or counter {termsText(terms)}, {handover}.
           </p>
         ) : mode === "counter" ? (
           <>
@@ -118,6 +124,7 @@ export function OfferThread({ offer }: { offer: Offer }) {
               initial={terms}
               pickerLabel={myParty === "seller" ? `Ask for cards from ${other.name}'s collection` : "Add cards from your collection"}
               submitLabel="Send counter"
+              names={{ buyer: nameFor("buyer"), seller: nameFor("seller") }}
               onCancel={() => setMode("idle")}
               onSubmit={(next, message) => {
                 const result = counterOffer(offer.id, next, message);
@@ -133,8 +140,8 @@ export function OfferThread({ offer }: { offer: Offer }) {
           <div className="space-y-3">
             <p className="text-lg">
               {myParty === "seller"
-                ? `Sell ${card.name} to ${other.name} for ${termsText(terms)}?`
-                : `Give ${termsText(terms)} for ${card.name}?`}{" "}
+                ? `Sell ${card.name} to ${other.name} for ${termsText(terms)}, ${handover}?`
+                : `Give ${termsText(terms)} for ${card.name}, ${handover}?`}{" "}
               This completes the trade and moves the cards.
             </p>
             <div className="flex flex-wrap gap-3">
@@ -174,7 +181,8 @@ export function OfferThread({ offer }: { offer: Offer }) {
         ) : (
           <div className="space-y-3">
             <p className="text-lg">
-              Your turn. {other.name} {offer.rounds.length === 1 ? "offered" : "countered with"} {termsText(terms)}.
+              Your turn. {other.name} {offer.rounds.length === 1 ? "offered" : "countered with"} {termsText(terms)},{" "}
+              {handover}.
             </p>
             <div className="flex flex-wrap gap-3">
               <button

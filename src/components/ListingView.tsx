@@ -159,6 +159,7 @@ export function ListingView() {
                   initial={{ cash: listing.askingPrice, itemIds: [] }}
                   pickerLabel="Add cards from your collection"
                   submitLabel="Send offer"
+                  names={{ buyer: "You", seller: seller.name }}
                   onSubmit={(terms, message) => {
                     const result = makeOffer(listing.id, terms, message);
                     if (result.ok) {

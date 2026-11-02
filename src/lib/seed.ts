@@ -79,7 +79,7 @@ export const SEED_OFFERS: Offer[] = [
     rounds: [
       {
         by: "buyer",
-        terms: { cash: 400, itemIds: ["i-ash-2"] },
+        terms: { cash: 400, itemIds: ["i-ash-2"], exchange: { method: "ship", paidBy: "buyer" } },
         message: "Would you take my Base Set Pikachu plus cash?",
         at: "2026-11-01T18:10:00Z",
       },
@@ -93,7 +93,14 @@ export const SEED_OFFERS: Offer[] = [
     listingId: "l-1",
     buyerId: "misty",
     sellerId: "ash",
-    rounds: [{ by: "buyer", terms: { cash: 280, itemIds: [] }, message: "", at: "2026-11-01T20:02:00Z" }],
+    rounds: [
+      {
+        by: "buyer",
+        terms: { cash: 280, itemIds: [], exchange: { method: "pickup", meetup: "Saturday afternoon, outside Oak's lab" } },
+        message: "",
+        at: "2026-11-01T20:02:00Z",
+      },
+    ],
     status: "pending",
     closedReason: null,
     updatedAt: "2026-11-01T20:02:00Z",
@@ -104,11 +111,16 @@ export const SEED_OFFERS: Offer[] = [
     buyerId: "ash",
     sellerId: "misty",
     rounds: [
-      { by: "buyer", terms: { cash: 180, itemIds: [] }, message: "", at: "2026-10-31T16:00:00Z" },
+      {
+        by: "buyer",
+        terms: { cash: 180, itemIds: [], exchange: { method: "pickup", meetup: "Any weekday after 6pm" } },
+        message: "",
+        at: "2026-10-31T16:00:00Z",
+      },
       {
         by: "seller",
-        terms: { cash: 215, itemIds: [] },
-        message: "Meet me at 215 and it ships tomorrow.",
+        terms: { cash: 215, itemIds: [], exchange: { method: "pickup", meetup: "Cerulean Gym lobby, Sunday at 2pm" } },
+        message: "Meet me at 215 and you can pick it up Sunday.",
         at: "2026-11-01T08:30:00Z",
       },
     ],

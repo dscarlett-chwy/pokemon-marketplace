@@ -6,6 +6,7 @@ import {
   CONDITIONS,
   EXCHANGE_METHODS,
   type Condition,
+  type Exchange,
   type ExchangeMethod,
   type MarketData,
   type OfferTerms,
@@ -30,8 +31,14 @@ const isTerms = (v: unknown): v is OfferTerms => {
     typeof t.cash === "number" &&
     Array.isArray(t.itemIds) &&
     t.itemIds.length <= MAX_TRADE_CARDS &&
-    t.itemIds.every(isRef)
+    t.itemIds.every(isRef) &&
+    isExchange(t.exchange)
   );
+};
+const isExchange = (v: unknown): v is Exchange => {
+  const e = v as Exchange;
+  if (typeof e !== "object" || e === null || !isMethod(e.method)) return false;
+  return e.method === "ship" ? e.paidBy === "buyer" || e.paidBy === "seller" : isText(e.meetup);
 };
 
 export function loadMarket(): MarketData {
@@ -95,13 +102,13 @@ export function withdrawListing(me: string, listingId: unknown): Result {
 
 export function makeOffer(me: string, listingId: unknown, terms: unknown, message: unknown, id: unknown): Result {
   if (!isRef(listingId) || !isTerms(terms) || !isText(message) || !isNewId(id, "o")) return INVALID;
-  const clean = { cash: terms.cash, itemIds: terms.itemIds };
+  const clean = { cash: terms.cash, itemIds: terms.itemIds, exchange: terms.exchange };
   return apply(me, (m) => rules.makeOffer(m, me, listingId, clean, message, id));
 }
 
 export function counterOffer(me: string, offerId: unknown, terms: unknown, message: unknown): Result {
   if (!isRef(offerId) || !isTerms(terms) || !isText(message)) return INVALID;
-  const clean = { cash: terms.cash, itemIds: terms.itemIds };
+  const clean = { cash: terms.cash, itemIds: terms.itemIds, exchange: terms.exchange };
   return apply(me, (m) => rules.counterOffer(m, me, offerId, clean, message));
 }
 

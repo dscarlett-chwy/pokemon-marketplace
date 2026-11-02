@@ -1,4 +1,5 @@
 import type { Card } from "./card";
+import { METHOD_LABELS } from "./exchange";
 import {
   EXCHANGE_METHODS,
   type Condition,
@@ -52,6 +53,17 @@ function checkTerms(m: MarketData, listing: Listing, buyerId: string, terms: Off
   if (!Number.isFinite(terms.cash) || terms.cash < 0) return "Cash must be zero or more.";
   if (terms.cash === 0 && terms.itemIds.length === 0) return "Add cash, cards, or both to the offer.";
   if (terms.itemIds.length > 0 && !listing.openToTrades) return "This seller only takes cash for this card.";
+  const { exchange } = terms;
+  if (!listing.exchangeMethods.includes(exchange.method)) {
+    const allowed = listing.exchangeMethods.map((x) => METHOD_LABELS[x].toLowerCase()).join(" or ");
+    return `${METHOD_LABELS[exchange.method]} isn't an option for this card. Choose ${allowed}.`;
+  }
+  if (exchange.method === "ship" && exchange.paidBy !== "buyer" && exchange.paidBy !== "seller") {
+    return "Choose who pays for shipping.";
+  }
+  if (exchange.method !== "ship" && exchange.meetup.length > MAX_MEETUP) {
+    return `Keep the meetup details under ${MAX_MEETUP} characters.`;
+  }
   const tradeable = new Set(tradeableItems(m, buyerId).map((i) => i.id));
   const missing = terms.itemIds.find((id) => !tradeable.has(id));
   if (missing) {
@@ -61,9 +73,13 @@ function checkTerms(m: MarketData, listing: Listing, buyerId: string, terms: Off
   return null;
 }
 
-const cleanTerms = (terms: OfferTerms): OfferTerms => ({
-  cash: Math.round(terms.cash * 100) / 100,
-  itemIds: [...new Set(terms.itemIds)],
+const cleanTerms = ({ cash, itemIds, exchange }: OfferTerms): OfferTerms => ({
+  cash: Math.round(cash * 100) / 100,
+  itemIds: [...new Set(itemIds)],
+  exchange:
+    exchange.method === "ship"
+      ? { method: "ship", paidBy: exchange.paidBy }
+      : { method: exchange.method, meetup: exchange.meetup.trim() },
 });
 
 function respond(m: MarketData, me: string, offerId: string): { offer: Offer; listing: Listing } | string {
@@ -98,6 +114,7 @@ export type ListingInput = {
 };
 
 export const MAX_AREA = 60;
+export const MAX_MEETUP = 120;
 
 export const meetsInPerson = (methods: ExchangeMethod[]) => methods.some((x) => x !== "ship");
 
