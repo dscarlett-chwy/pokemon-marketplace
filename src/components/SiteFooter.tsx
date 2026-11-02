@@ -10,10 +10,11 @@ export function SiteFooter() {
   return (
     <footer className="mt-16 border-t border-rule">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-6 text-sm text-ink-soft sm:px-6">
-        <p>Card data and images from the Pokemon TCG API. Listings and offers are saved in this browser only.</p>
+        <p>Card data and images from the Pokemon TCG API. Listings and offers are shared with everyone on this site.</p>
         <button
           type="button"
           onClick={() => {
+            if (!window.confirm("Reset the demo for everyone? All cards, listings and offers go back to the starting set.")) return;
             resetDemo();
             show("Demo data reset");
           }}

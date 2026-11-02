@@ -1,22 +1,20 @@
 "use client";
 
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect } from "react";
 import { useMarketplace } from "./marketplace";
 
-const subscribe = (onChange: () => void) => useMarketplace.persist.onFinishHydration(onChange);
-
-/** Saved data lives in localStorage, so it only exists after the first client render. */
+/** Marketplace data comes from the server, so it only exists after the first load finishes. */
 export function useHydrated() {
-  return useSyncExternalStore(
-    subscribe,
-    () => useMarketplace.persist.hasHydrated(),
-    () => false,
-  );
+  return useMarketplace((s) => s.loaded);
 }
 
+/** Loads the shared data, and reloads it when the tab comes back so other collectors' changes show up. */
 export function StoreHydrator() {
   useEffect(() => {
-    useMarketplace.persist.rehydrate();
+    const { refresh } = useMarketplace.getState();
+    void refresh();
+    window.addEventListener("focus", refresh);
+    return () => window.removeEventListener("focus", refresh);
   }, []);
   return null;
 }
