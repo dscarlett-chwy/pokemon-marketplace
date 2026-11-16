@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import { METHOD_LABELS } from "@/lib/exchange";
 import type { Offer, Party } from "@/lib/types";
 import { useHydrated } from "@/store/hydration";
-import { latestTerms, needsAction, partyOf, useMarketplace } from "@/store/marketplace";
+import { latestTerms, needsAction, partyOf, useMarketplace, useMe } from "@/store/marketplace";
 import { CardImage } from "./CardImage";
 import { OfferThread } from "./OfferThread";
 import { termsText } from "./TermsSummary";
@@ -36,7 +36,7 @@ export function OffersView() {
   const router = useRouter();
   const pathname = usePathname();
   const selectedId = useSearchParams().get("offer");
-  const me = useMarketplace((s) => s.currentUserId);
+  const me = useMe();
   const offers = useMarketplace((s) => s.offers);
   const listings = useMarketplace((s) => s.listings);
   const items = useMarketplace((s) => s.items);

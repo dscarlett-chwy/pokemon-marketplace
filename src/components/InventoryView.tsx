@@ -4,15 +4,15 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { formatMoney } from "@/lib/format";
 import { useHydrated } from "@/store/hydration";
-import { activeListingForItem, latestTerms, lockedItems, offeredItemIds, useMarketplace } from "@/store/marketplace";
+import { activeListingForItem, latestTerms, lockedItems, offeredItemIds, useMarketplace, useMe } from "@/store/marketplace";
 import { AddCardPanel } from "./AddCardPanel";
 import { CardImage } from "./CardImage";
 import { ListCardDialog } from "./ListCardDialog";
 
 export function InventoryView() {
   const hydrated = useHydrated();
-  const me = useMarketplace((s) => s.currentUserId);
-  const user = useMarketplace((s) => s.users[s.currentUserId]);
+  const me = useMe();
+  const user = useMarketplace((s) => s.users[me]);
   const items = useMarketplace((s) => s.items);
   const cards = useMarketplace((s) => s.cards);
   const listings = useMarketplace((s) => s.listings);

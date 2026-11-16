@@ -5,7 +5,7 @@ import { useState } from "react";
 import { exchangePhrase } from "@/lib/exchange";
 import { formatMoney, formatWhen } from "@/lib/format";
 import type { Offer } from "@/lib/types";
-import { latestTerms, partyOf, useMarketplace, whoseTurn } from "@/store/marketplace";
+import { latestTerms, partyOf, useMarketplace, useMe, whoseTurn } from "@/store/marketplace";
 import { useNotice } from "@/store/notice";
 import { CardImage } from "./CardImage";
 import { OfferForm } from "./OfferForm";
@@ -15,7 +15,7 @@ import { paymentText, sellerGivesText, sideText, termsText, TermsSummary } from 
 type Mode = "idle" | "confirm-accept" | "confirm-decline" | "counter";
 
 export function OfferThread({ offer }: { offer: Offer }) {
-  const me = useMarketplace((s) => s.currentUserId);
+  const me = useMe();
   const users = useMarketplace((s) => s.users);
   const listing = useMarketplace((s) => s.listings[offer.listingId]);
   const item = useMarketplace((s) => s.items[listing.itemId]);

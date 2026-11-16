@@ -6,7 +6,7 @@ import { BUCKETS, type Bucket, dashboardStats, dealRows, type DealRow, sellerAdd
 import { formatMoney, formatWhen } from "@/lib/format";
 import type { Party } from "@/lib/types";
 import { useHydrated } from "@/store/hydration";
-import { useMarketplace } from "@/store/marketplace";
+import { useMarketplace, useMe } from "@/store/marketplace";
 import { CardImage } from "./CardImage";
 
 const SIDES: { party: Party; label: string }[] = [
@@ -122,7 +122,7 @@ function SaleItem({ row }: { row: DealRow }) {
 
 export function DashboardView() {
   const hydrated = useHydrated();
-  const me = useMarketplace((s) => s.currentUserId);
+  const me = useMe();
   const users = useMarketplace((s) => s.users);
   const items = useMarketplace((s) => s.items);
   const cards = useMarketplace((s) => s.cards);

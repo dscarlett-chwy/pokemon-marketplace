@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { Suspense } from "react";
 import { needsAction, useMarketplace } from "@/store/marketplace";
 import { useHydrated } from "@/store/hydration";
-import { UserSwitcher } from "./UserSwitcher";
+import { AccountMenu } from "./AccountMenu";
 
 const NAV = [
   { href: "/", label: "Marketplace" },
@@ -18,7 +18,7 @@ function useWaitingOnMe() {
   const hydrated = useHydrated();
   const offers = useMarketplace((s) => s.offers);
   const me = useMarketplace((s) => s.currentUserId);
-  if (!hydrated) return 0;
+  if (!hydrated || !me) return 0;
   return Object.values(offers).filter((o) => needsAction(o, me)).length;
 }
 
@@ -71,7 +71,7 @@ export function SiteHeader() {
             <ActiveNav />
           </Suspense>
         </div>
-        <UserSwitcher />
+        <AccountMenu />
       </nav>
     </header>
   );

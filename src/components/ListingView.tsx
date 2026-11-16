@@ -10,6 +10,7 @@ import { useMarketplace } from "@/store/marketplace";
 import { useNotice } from "@/store/notice";
 import { CardImage } from "./CardImage";
 import { OfferForm } from "./OfferForm";
+import { SignInPrompt } from "./SignInGate";
 
 export function ListingView() {
   const { id } = useParams<{ id: string }>();
@@ -165,6 +166,10 @@ export function ListingView() {
                   Remove listing
                 </button>
               </>
+            ) : !me ? (
+              <SignInPrompt title="Sign in to make an offer">
+                Offers come from your account, so {seller.name} knows who they&apos;re trading with.
+              </SignInPrompt>
             ) : myOpenOffer ? (
               <>
                 <h2 id="action-heading" className="font-display text-xl font-bold">

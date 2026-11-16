@@ -66,7 +66,11 @@ export function loadMarket(): MarketData {
 }
 
 export function isUser(userId: string) {
-  return userId in loadMarket().users;
+  return getDb().prepare("SELECT 1 FROM users WHERE id = ?").get(userId) !== undefined;
+}
+
+export function addUser(userId: string, name: string) {
+  getDb().prepare("INSERT OR IGNORE INTO users (id, name) VALUES (?, ?)").run(userId, name);
 }
 
 /** Re-runs a rule against the stored market and saves its changes in one transaction. */
@@ -150,6 +154,9 @@ export function cancelTrade(me: string, offerId: unknown): Result {
   return apply(me, (m) => rules.cancelTrade(m, me, offerId));
 }
 
+/** Accounts survive a reset; their cards, listings and offers don't. */
 export function resetDemo() {
+  const users = Object.values(loadMarket().users);
   resetMarket(getDb());
+  for (const user of users) addUser(user.id, user.name);
 }

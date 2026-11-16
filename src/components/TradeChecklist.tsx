@@ -6,7 +6,7 @@ import { exchangeLabel } from "@/lib/exchange";
 import { formatMoney } from "@/lib/format";
 import { payer, type StepState } from "@/lib/marketplace-rules";
 import type { Listing, Offer, Party, Trade } from "@/lib/types";
-import { latestTerms, partyOf, tradeSteps, useMarketplace } from "@/store/marketplace";
+import { latestTerms, partyOf, tradeSteps, useMarketplace, useMe } from "@/store/marketplace";
 import { useNotice } from "@/store/notice";
 
 const list = new Intl.ListFormat("en", { type: "conjunction" });
@@ -42,7 +42,7 @@ export function TradeChecklist({
   card: Card;
   nameFor: (party: Party) => string;
 }) {
-  const me = useMarketplace((s) => s.currentUserId);
+  const me = useMe();
   const items = useMarketplace((s) => s.items);
   const cards = useMarketplace((s) => s.cards);
   const completeStep = useMarketplace((s) => s.completeStep);

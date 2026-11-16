@@ -1,22 +1,21 @@
 import "server-only";
-import { cookies } from "next/headers";
-import { USERS } from "@/lib/seed";
-import { isUser } from "./marketplace";
+import { auth, currentUser } from "@clerk/nextjs/server";
+import { addUser, isUser } from "./marketplace";
 
-const COOKIE = "viewing-as";
+type ClerkUser = NonNullable<Awaited<ReturnType<typeof currentUser>>>;
 
-/** The demo has no sign-in: whoever opens the app picks which collector they act as. */
-export async function getViewer() {
-  const id = (await cookies()).get(COOKIE)?.value;
-  return id && isUser(id) ? id : USERS[0].id;
-}
+const fromEmail = (email: string | undefined) => {
+  const local = email?.split("@")[0].split("+")[0];
+  return local ? local[0].toUpperCase() + local.slice(1) : null;
+};
 
-export async function setViewer(userId: string) {
-  (await cookies()).set(COOKIE, userId, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 365,
-  });
+const displayName = (user: ClerkUser | null) =>
+  (user?.firstName ?? user?.username ?? fromEmail(user?.primaryEmailAddress?.emailAddress) ?? "Collector").slice(0, 40);
+
+/** The signed-in Clerk user, added to the marketplace the first time they show up. Null when signed out. */
+export async function getViewer(): Promise<string | null> {
+  const { userId } = await auth();
+  if (!userId) return null;
+  if (!isUser(userId)) addUser(userId, displayName(await currentUser()));
+  return userId;
 }

@@ -20,11 +20,10 @@ export {
   whoseTurn,
 } from "@/lib/marketplace-rules";
 
-type Data = MarketData & { currentUserId: string; loaded: boolean };
+type Data = MarketData & { currentUserId: string | null; loaded: boolean };
 
 type Actions = {
   refresh: () => Promise<void>;
-  setCurrentUser: (userId: string) => void;
   addCard: (card: Card, condition: Condition) => Result;
   createListing: (input: rules.ListingInput) => Result;
   withdrawListing: (listingId: string) => Result;
@@ -40,7 +39,7 @@ type Actions = {
 export type MarketplaceState = Data & Actions;
 
 const empty: Data = {
-  currentUserId: USERS[0].id,
+  currentUserId: null,
   loaded: false,
   users: Object.fromEntries(USERS.map((u) => [u.id, u])),
   cards: {},
@@ -48,6 +47,13 @@ const empty: Data = {
   listings: {},
   offers: {},
 };
+
+/** The signed-in user's id, for components that only render inside a SignInGate. */
+export function useMe() {
+  const me = useMarketplace((s) => s.currentUserId);
+  if (!me) throw new Error("useMe needs a signed-in user; render this inside SignInGate.");
+  return me;
+}
 
 const showError = (text: string) => useNotice.getState().show(text, "error");
 
@@ -76,6 +82,7 @@ export const useMarketplace = create<MarketplaceState>()((set, get) => {
 
   const run = (rule: (m: MarketData, me: string) => rules.Outcome, send: () => Promise<server.Synced>): Result => {
     const s = get();
+    if (!s.currentUserId) return { ok: false, error: "Sign in to do that." };
     const { result, market } = rule(s, s.currentUserId);
     if (result.ok) {
       set(market);
@@ -92,17 +99,12 @@ export const useMarketplace = create<MarketplaceState>()((set, get) => {
       try {
         const res = await fetch("/api/marketplace", { cache: "no-store" });
         if (!res.ok) throw new Error(String(res.status));
-        const body = (await res.json()) as { currentUserId: string; market: MarketData };
+        const body = (await res.json()) as { currentUserId: string | null; market: MarketData };
         // A change made while this was loading would be wiped out by the older snapshot.
         if (inFlight === 0 && started === latest) set({ ...body.market, currentUserId: body.currentUserId, loaded: true });
       } catch {
         showError("Couldn't load the marketplace. Check your connection and try again.");
       }
-    },
-
-    setCurrentUser: (userId) => {
-      set({ currentUserId: userId });
-      save(() => server.viewAs(userId));
     },
 
     addCard: (card, condition) => {
@@ -166,7 +168,7 @@ export const useMarketplace = create<MarketplaceState>()((set, get) => {
       ),
 
     resetDemo: () => {
-      set({ ...seedMarket(), currentUserId: USERS[0].id });
+      set({ ...seedMarket(), users: { ...get().users, ...seedMarket().users } });
       save(server.resetDemo);
     },
   };

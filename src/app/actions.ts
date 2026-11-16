@@ -2,59 +2,59 @@
 
 import type { MarketData, Result } from "@/lib/types";
 import * as market from "@/server/marketplace";
-import { getViewer, setViewer } from "@/server/viewer";
+import { getViewer } from "@/server/viewer";
 
 export type Synced = { result: Result; market: MarketData };
 
 const synced = (result: Result): Synced => ({ result, market: market.loadMarket() });
 
-export async function viewAs(userId: unknown): Promise<Synced> {
-  if (typeof userId !== "string" || !market.isUser(userId)) {
-    return synced({ ok: false, error: "That collector doesn't exist." });
-  }
-  await setViewer(userId);
-  return synced({ ok: true, id: userId });
+async function asViewer(run: (me: string) => Result | Promise<Result>): Promise<Synced> {
+  const me = await getViewer();
+  return synced(me ? await run(me) : { ok: false, error: "Sign in to do that." });
 }
 
 export async function addCard(cardId: unknown, condition: unknown, id: unknown) {
-  return synced(await market.addCard(await getViewer(), cardId, condition, id));
+  return asViewer((me) => market.addCard(me, cardId, condition, id));
 }
 
 export async function createListing(input: unknown, id: unknown) {
-  return synced(market.createListing(await getViewer(), input, id));
+  return asViewer((me) => market.createListing(me, input, id));
 }
 
 export async function withdrawListing(listingId: unknown) {
-  return synced(market.withdrawListing(await getViewer(), listingId));
+  return asViewer((me) => market.withdrawListing(me, listingId));
 }
 
 export async function makeOffer(listingId: unknown, terms: unknown, message: unknown, id: unknown) {
-  return synced(market.makeOffer(await getViewer(), listingId, terms, message, id));
+  return asViewer((me) => market.makeOffer(me, listingId, terms, message, id));
 }
 
 export async function counterOffer(offerId: unknown, terms: unknown, message: unknown) {
-  return synced(market.counterOffer(await getViewer(), offerId, terms, message));
+  return asViewer((me) => market.counterOffer(me, offerId, terms, message));
 }
 
 export async function acceptOffer(offerId: unknown) {
-  return synced(market.acceptOffer(await getViewer(), offerId));
+  return asViewer((me) => market.acceptOffer(me, offerId));
 }
 
 export async function declineOffer(offerId: unknown) {
-  return synced(market.declineOffer(await getViewer(), offerId));
+  return asViewer((me) => market.declineOffer(me, offerId));
 }
 
 export async function completeStep(offerId: unknown, step: unknown) {
-  return synced(market.completeStep(await getViewer(), offerId, step));
+  return asViewer((me) => market.completeStep(me, offerId, step));
 }
 
 export async function cancelTrade(offerId: unknown) {
-  return synced(market.cancelTrade(await getViewer(), offerId));
+  return asViewer((me) => market.cancelTrade(me, offerId));
 }
 
 export async function resetDemo() {
-  market.resetDemo();
-  const first = Object.keys(market.loadMarket().users)[0];
-  await setViewer(first);
-  return synced({ ok: true, id: first });
+  if (process.env.NODE_ENV === "production") {
+    return synced({ ok: false, error: "Resetting the demo is only available in development." });
+  }
+  return asViewer((me) => {
+    market.resetDemo();
+    return { ok: true, id: me };
+  });
 }
