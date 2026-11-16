@@ -1,5 +1,6 @@
 "use client";
 
+import { RowsSkeleton } from "./Skeletons";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { BUCKETS, type Bucket, dashboardStats, dealRows, type DealRow, sellerAdds, sideText } from "@/lib/dashboard";
@@ -137,7 +138,7 @@ export function DashboardView() {
   );
   const stats = useMemo(() => dashboardStats(listings, me, rows), [listings, me, rows]);
 
-  if (!hydrated) return <p className="text-ink-soft">Opening the binder…</p>;
+  if (!hydrated) return <RowsSkeleton label="Loading dashboard" />;
 
   const sideRows = rows.filter((r) => r.party === side);
   const shown = sideRows.filter((r) => r.bucket === bucket);

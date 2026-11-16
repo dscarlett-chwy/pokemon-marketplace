@@ -1,5 +1,6 @@
 "use client";
 
+import { SearchResultsSkeleton } from "./Skeletons";
 import { useEffect, useState } from "react";
 import type { Card } from "@/lib/card";
 import { fetchCardSearch } from "@/lib/cards-client";
@@ -116,7 +117,7 @@ export function AddCardPanel({ onClose }: { onClose: () => void }) {
         {term.length < 2 ? (
           <p className="text-ink-soft">Type at least 2 letters to search.</p>
         ) : search.status === "loading" || search.status === "idle" ? (
-          <p className="text-ink-soft">Searching the catalog…</p>
+          <SearchResultsSkeleton />
         ) : search.status === "error" ? (
           <p className="text-decline">
             {search.message}.{" "}

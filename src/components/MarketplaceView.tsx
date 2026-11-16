@@ -1,5 +1,6 @@
 "use client";
 
+import { CardGridSkeleton } from "./Skeletons";
 import { useDeferredValue, useMemo, useState, ViewTransition } from "react";
 import { useListingRows } from "@/lib/listing-rows";
 import { useHydrated } from "@/store/hydration";
@@ -51,7 +52,9 @@ export function MarketplaceView() {
       </div>
 
       {!hydrated ? (
-        <p className="text-ink-soft">Opening the binder…</p>
+        <div className="pt-13">
+          <CardGridSkeleton />
+        </div>
       ) : (
         <section aria-labelledby="results-heading" className="space-y-5">
           <div className="flex min-h-8 items-center justify-between gap-4">

@@ -1,5 +1,6 @@
 "use client";
 
+import { RowsSkeleton } from "./Skeletons";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { METHOD_LABELS } from "@/lib/exchange";
@@ -59,7 +60,7 @@ export function OffersView() {
 
   const select = (id: string) => router.replace(`${pathname}?offer=${id}`, { scroll: false });
 
-  if (!hydrated) return <p className="text-ink-soft">Opening the binder…</p>;
+  if (!hydrated) return <RowsSkeleton label="Loading offers" />;
 
   return (
     <div className="space-y-6">

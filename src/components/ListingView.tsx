@@ -1,5 +1,6 @@
 "use client";
 
+import { ListingSkeleton } from "./Skeletons";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { methodsText } from "@/lib/exchange";
@@ -24,7 +25,7 @@ export function ListingView() {
   const show = useNotice((s) => s.show);
   const row = useListingRows().find((r) => r.listing.id === id);
 
-  if (!hydrated) return <p className="text-ink-soft">Opening the binder…</p>;
+  if (!hydrated) return <ListingSkeleton />;
   if (!row) {
     return (
       <div className="space-y-3">

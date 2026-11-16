@@ -1,5 +1,6 @@
 "use client";
 
+import { CardGridSkeleton } from "./Skeletons";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { formatMoney } from "@/lib/format";
@@ -28,7 +29,7 @@ export function InventoryView() {
   const locked = useMemo(() => lockedItems({ listings, offers }), [listings, offers]);
   const listingItem = listingItemId ? items[listingItemId] : null;
 
-  if (!hydrated) return <p className="text-ink-soft">Opening the binder…</p>;
+  if (!hydrated) return <CardGridSkeleton label="Loading your cards" />;
 
   return (
     <div className="space-y-8">
