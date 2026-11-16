@@ -47,9 +47,9 @@ export function OffersView() {
   const mine = useMemo(
     () =>
       Object.values(offers)
-        .filter((o) => partyOf(o, me))
+        .filter((o) => partyOf(o, me) && cards[items[listings[o.listingId]?.itemId]?.cardId])
         .sort((a, b) => rank(a, me) - rank(b, me) || b.updatedAt.localeCompare(a.updatedAt)),
-    [offers, me],
+    [offers, listings, items, cards, me],
   );
 
   const selectedOffer = mine.find((o) => o.id === selectedId) ?? null;
