@@ -6,11 +6,11 @@ import { getViewer } from "@/server/viewer";
 
 export type Synced = { result: Result; market: MarketData };
 
-const synced = (result: Result): Synced => ({ result, market: market.loadMarket() });
+const synced = (result: Result, me: string | null): Synced => ({ result, market: market.marketFor(me) });
 
 async function asViewer(run: (me: string) => Result | Promise<Result>): Promise<Synced> {
   const me = await getViewer();
-  return synced(me ? await run(me) : { ok: false, error: "Sign in to do that." });
+  return synced(me ? await run(me) : { ok: false, error: "Sign in to do that." }, me);
 }
 
 export async function addCard(cardId: unknown, condition: unknown, id: unknown) {
@@ -51,7 +51,7 @@ export async function cancelTrade(offerId: unknown) {
 
 export async function resetDemo() {
   if (process.env.NODE_ENV === "production") {
-    return synced({ ok: false, error: "Resetting the demo is only available in development." });
+    return synced({ ok: false, error: "Resetting the demo is only available in development." }, await getViewer());
   }
   return asViewer((me) => {
     market.resetDemo();

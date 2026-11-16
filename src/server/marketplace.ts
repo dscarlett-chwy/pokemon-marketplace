@@ -61,8 +61,64 @@ const isExchange = (v: unknown): v is Exchange => {
   return e.method === "ship" ? e.paidBy === "buyer" || e.paidBy === "seller" : isText(e.meetup);
 };
 
-export function loadMarket(): MarketData {
+function loadMarket(): MarketData {
   return readMarket(getDb());
+}
+
+/**
+ * The part of the market one visitor may see: their own cards and offers, the cards they could ask
+ * a trading partner to add, and every listing. Closed listings stay public so their links still
+ * work, but who bought the card doesn't. Rules still run against the full market.
+ */
+export function marketFor(viewer: string | null): MarketData {
+  const full = loadMarket();
+  const { listings } = full;
+  const offers = Object.fromEntries(
+    Object.entries(full.offers).filter(([, o]) => viewer !== null && (o.buyerId === viewer || o.sellerId === viewer)),
+  );
+
+  // Collectors whose tradeable cards the viewer may ask for in an offer or counter.
+  const partners = new Set<string>();
+  if (viewer) {
+    for (const l of Object.values(full.listings)) if (l.status === "active" && l.openToTrades) partners.add(l.sellerId);
+    for (const o of Object.values(offers)) {
+      if (o.status === "pending" && full.listings[o.listingId]?.openToTrades) partners.add(o.buyerId).add(o.sellerId);
+    }
+    partners.delete(viewer);
+  }
+
+  // Each visible item mapped to whether its owner may be shown.
+  const shown = new Map<string, boolean>();
+  const show = (id: string, owner: boolean) => {
+    if (full.items[id]) shown.set(id, owner || shown.get(id) === true);
+  };
+  for (const item of Object.values(full.items)) if (item.ownerId === viewer) show(item.id, true);
+  for (const partner of partners) for (const item of rules.tradeableItems(full, partner)) show(item.id, true);
+  for (const l of Object.values(listings)) {
+    show(l.itemId, full.items[l.itemId]?.ownerId === l.sellerId && (l.status === "active" || l.status === "trading"));
+  }
+  for (const o of Object.values(offers)) {
+    const parties = [o.buyerId, o.sellerId];
+    const ids = [listings[o.listingId]?.itemId, ...o.rounds.flatMap((r) => rules.offeredItemIds(r.terms))];
+    for (const id of ids) if (id) show(id, parties.includes(full.items[id]?.ownerId));
+  }
+
+  const items: MarketData["items"] = {};
+  for (const [id, owner] of shown) items[id] = owner ? full.items[id] : { ...full.items[id], ownerId: "" };
+
+  const cards: MarketData["cards"] = {};
+  for (const item of Object.values(items)) if (full.cards[item.cardId]) cards[item.cardId] = full.cards[item.cardId];
+
+  const userIds = new Set([
+    ...(viewer ? [viewer] : []),
+    ...Object.values(listings).map((l) => l.sellerId),
+    ...Object.values(offers).flatMap((o) => [o.buyerId, o.sellerId]),
+    ...Object.values(items).map((i) => i.ownerId),
+  ]);
+  const users: MarketData["users"] = {};
+  for (const id of userIds) if (full.users[id]) users[id] = full.users[id];
+
+  return { users, cards, items, listings, offers };
 }
 
 export function isUser(userId: string) {
