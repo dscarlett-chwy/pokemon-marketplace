@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useDeferredValue, useMemo, useState, ViewTransition } from "react";
 import { useListingRows } from "@/lib/listing-rows";
 import { useHydrated } from "@/store/hydration";
 import { useMarketplace } from "@/store/marketplace";
@@ -11,7 +11,9 @@ export function MarketplaceView() {
   const hydrated = useHydrated();
   const me = useMarketplace((s) => s.currentUserId);
   const rows = useListingRows();
-  const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
+  const [controls, setFilters] = useState<Filters>(EMPTY_FILTERS);
+  // The controls answer at once; the grid follows a beat later as a transition, which is what lets the cards animate.
+  const filters = useDeferredValue(controls);
 
   const active = useMemo(() => rows.filter((r) => r.listing.status === "active"), [rows]);
   const types = useMemo(() => [...new Set(active.flatMap((r) => r.card.types))].sort(), [active]);
@@ -39,28 +41,28 @@ export function MarketplaceView() {
     });
   }, [active, filters]);
 
-  const filtered = JSON.stringify(filters) !== JSON.stringify(EMPTY_FILTERS);
+  const filtered = JSON.stringify(controls) !== JSON.stringify(EMPTY_FILTERS);
 
   return (
-    <div className="space-y-8">
-      <div className="max-w-3xl space-y-5">
-        <h1 className="font-display text-display font-extrabold tracking-tight">Find a card</h1>
-        <SearchFilters filters={filters} onChange={setFilters} types={types} rarities={rarities} />
+    <div className="space-y-8 sm:space-y-10">
+      <div className="space-y-6 sm:space-y-8">
+        <h1 className="font-display text-display font-bold">Find your next card</h1>
+        <SearchFilters filters={controls} onChange={setFilters} types={types} rarities={rarities} />
       </div>
 
       {!hydrated ? (
         <p className="text-ink-soft">Opening the binder…</p>
       ) : (
-        <section aria-labelledby="results-heading" className="space-y-3">
-          <div className="flex items-baseline justify-between gap-4">
-            <h2 id="results-heading" className="tabular text-base font-semibold" aria-live="polite">
+        <section aria-labelledby="results-heading" className="space-y-5">
+          <div className="flex min-h-8 items-center justify-between gap-4">
+            <h2 id="results-heading" className="tabular text-sm font-medium tracking-normal text-ink-soft" aria-live="polite">
               {results.length === 1 ? "1 card for sale" : `${results.length} cards for sale`}
             </h2>
             {filtered && (
               <button
                 type="button"
                 onClick={() => setFilters(EMPTY_FILTERS)}
-                className="rounded-full px-2 py-1 text-sm font-semibold text-accent underline underline-offset-4"
+                className="rounded-full px-3 py-1 text-sm font-medium text-accent hover:bg-accent-tint"
               >
                 Clear filters
               </button>
@@ -68,19 +70,18 @@ export function MarketplaceView() {
           </div>
 
           {results.length === 0 ? (
-            <div>
-              <p className="py-12 text-center text-lg">
-                No cards match. Try a different name, or clear the filters to see every card for sale.
-              </p>
+            <div className="rounded-3xl border border-dashed border-rule px-6 py-16 text-center">
+              <p className="text-lg font-semibold">No cards match</p>
+              <p className="mx-auto mt-1 max-w-sm text-ink-soft">Try a different name, or clear the filters to see every card for sale.</p>
             </div>
           ) : (
-            <div>
-              <ul className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3">
-                {results.map((row, i) => (
-                  <CardTile key={row.listing.id} row={row} isMine={row.listing.sellerId === me} priority={i < 3} />
-                ))}
-              </ul>
-            </div>
+            <ul className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-7 sm:gap-y-12 lg:grid-cols-4">
+              {results.map((row, i) => (
+                <ViewTransition key={row.listing.id} default="tile" enter="tile-in" exit="tile-out">
+                  <CardTile row={row} isMine={row.listing.sellerId === me} priority={i < 4} />
+                </ViewTransition>
+              ))}
+            </ul>
           )}
         </section>
       )}

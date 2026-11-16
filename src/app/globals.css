@@ -149,3 +149,105 @@ h4 {
     animation: none;
   }
 }
+
+/* Selects dressed as chips, with their own chevron. */
+.pill-select {
+  appearance: none;
+  padding-right: 2.25rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%2326262b' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1rem;
+}
+
+/*
+ * A card for sale sits on the paper like a real one on a table. Picking it up
+ * (hover) tilts it and runs a band of foil glare across the face.
+ */
+.card-foil {
+  position: relative;
+  border-radius: 4.5% / 3.2%;
+  box-shadow: var(--shadow-card);
+  transition:
+    transform 450ms var(--ease-out-soft),
+    box-shadow 450ms var(--ease-out-soft);
+}
+
+.card-foil::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+      112deg,
+      transparent 38%,
+      rgb(255 255 255 / 0.55) 47%,
+      rgb(190 170 255 / 0.45) 52%,
+      transparent 61%
+    )
+    100% 0 / 300% 100% no-repeat;
+  mix-blend-mode: soft-light;
+  opacity: 0;
+  transition:
+    background-position 900ms var(--ease-out-soft),
+    opacity 300ms ease;
+  pointer-events: none;
+}
+
+@media (hover: hover) {
+  .group:hover .card-foil {
+    transform: translateY(-6px) rotate(-1.25deg);
+    box-shadow: var(--shadow-lift);
+  }
+
+  .group:hover .card-foil::after {
+    background-position: 0 0;
+    opacity: 1;
+  }
+}
+
+/* Filtering: cards that stay slide to their new slot, the rest shrink away or pop in. */
+::view-transition {
+  pointer-events: none;
+}
+
+::view-transition-group(.tile) {
+  animation-duration: 420ms;
+  animation-timing-function: var(--ease-out-soft);
+}
+
+::view-transition-old(.tile-out) {
+  animation: 180ms ease-in both tile-out;
+}
+
+::view-transition-new(.tile-in) {
+  animation: 360ms var(--ease-out-soft) 90ms both tile-in;
+}
+
+@keyframes tile-out {
+  to {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+}
+
+@keyframes tile-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(0.75rem);
+  }
+}
+
+::view-transition-group(.card-morph) {
+  animation-duration: 480ms;
+  animation-timing-function: var(--ease-out-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}
