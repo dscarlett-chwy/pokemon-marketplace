@@ -3,6 +3,7 @@
 import { ListingSkeleton } from "./Skeletons";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { ViewTransition } from "react";
 import { methodsText } from "@/lib/exchange";
 import { formatMoney, formatWhen } from "@/lib/format";
 import { useListingRows } from "@/lib/listing-rows";
@@ -30,7 +31,7 @@ export function ListingView() {
     return (
       <div className="space-y-3">
         <h1 className="font-display text-title font-bold">This listing doesn&apos;t exist</h1>
-        <Link href="/" className="font-semibold text-accent underline underline-offset-4">
+        <Link href="/" className="font-medium text-accent underline decoration-accent/30 underline-offset-4 hover:decoration-accent">
           Back to the marketplace
         </Link>
       </div>
@@ -46,59 +47,63 @@ export function ListingView() {
 
   return (
     <div className="space-y-6">
-      <Link href="/" className="inline-block font-semibold text-accent underline underline-offset-4">
+      <Link href="/" className="-ml-3 inline-block rounded-full px-3 py-1.5 text-sm font-medium text-ink-soft hover:bg-ink/5 hover:text-ink">
         Back to the marketplace
       </Link>
 
-      <div className="grid gap-8 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-        <div className="self-start">
-          <CardImage card={card} large sizes="(min-width: 768px) 420px, 90vw" priority />
+      <div className="grid gap-8 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-14">
+        <div className="mx-auto w-full max-w-sm self-start md:sticky md:top-24 md:max-w-none">
+          <ViewTransition name={`card-${listing.id}`} share="card-morph" default="none">
+            <div className="rounded-[4.5%/3.2%] shadow-lift">
+              <CardImage card={card} large sizes="(min-width: 768px) 420px, 90vw" priority />
+            </div>
+          </ViewTransition>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-8">
           <div>
-            <h1 className="font-display text-display font-extrabold tracking-tight">{card.name}</h1>
-            <p className="mt-1 text-lg text-ink-soft">
+            <h1 className="font-display text-display font-bold">{card.name}</h1>
+            <p className="mt-3 text-lg text-ink-soft">
               {card.set.name} #{card.number}
               {card.rarity && `, ${card.rarity}`}
             </p>
+            <p className="tabular mt-5 text-4xl font-bold tracking-[-0.04em]">
+              <span className="sr-only">Asking price </span>
+              {formatMoney(listing.askingPrice)}
+            </p>
           </div>
 
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3">
-            <div>
-              <dt className="text-sm text-ink-soft">Asking price</dt>
-              <dd className="tabular font-display text-title font-bold">{formatMoney(listing.askingPrice)}</dd>
-            </div>
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-5 border-y border-rule py-6 sm:grid-cols-3">
             <div>
               <dt className="text-sm text-ink-soft">Condition</dt>
-              <dd className="text-lg font-semibold">{item.condition}</dd>
+              <dd className="mt-0.5 font-semibold">{item.condition}</dd>
             </div>
             <div>
               <dt className="text-sm text-ink-soft">Seller</dt>
-              <dd className="text-lg font-semibold">{isMine ? "You" : seller.name}</dd>
+              <dd className="mt-0.5 font-semibold">{isMine ? "You" : seller.name}</dd>
             </div>
             {card.marketPrice !== null && (
               <div>
                 <dt className="text-sm text-ink-soft">Recent market price</dt>
-                <dd className="tabular text-lg font-semibold">{formatMoney(card.marketPrice)}</dd>
+                <dd className="tabular mt-0.5 font-semibold">{formatMoney(card.marketPrice)}</dd>
               </div>
             )}
             <div>
               <dt className="text-sm text-ink-soft">Payment</dt>
-              <dd className="text-lg font-semibold">{listing.openToTrades ? "Cash or trade" : "Cash only"}</dd>
+              <dd className="mt-0.5 font-semibold">{listing.openToTrades ? "Cash or trade" : "Cash only"}</dd>
             </div>
             <div>
               <dt className="text-sm text-ink-soft">Listed</dt>
-              <dd className="text-lg font-semibold">{formatWhen(listing.createdAt)}</dd>
+              <dd className="mt-0.5 font-semibold">{formatWhen(listing.createdAt)}</dd>
             </div>
             <div className="col-span-full">
               <dt className="text-sm text-ink-soft">Handover</dt>
-              <dd className="text-lg font-semibold">{methodsText(listing)}</dd>
+              <dd className="mt-0.5 font-semibold">{methodsText(listing)}</dd>
             </div>
           </dl>
 
           {listing.note && (
-            <blockquote className="border-l-4 border-accent pl-4 text-lg">
+            <blockquote className="border-l-2 border-accent pl-5 text-lg">
               {listing.note}
               <footer className="mt-1 text-sm text-ink-soft">{isMine ? "Your note" : `${seller.name}'s note`}</footer>
             </blockquote>
@@ -118,7 +123,7 @@ export function ListingView() {
                     </p>
                     <Link
                       href={`/offers?offer=${myTrade.id}`}
-                      className="mt-2 inline-block font-semibold text-accent underline underline-offset-4"
+                      className="mt-2 inline-block font-medium text-accent underline decoration-accent/30 underline-offset-4 hover:decoration-accent"
                     >
                       View trade
                     </Link>
@@ -126,7 +131,7 @@ export function ListingView() {
                 ) : (
                   <>
                     <p className="mt-1">{seller.name} is trading it with another collector. It comes back on sale if that trade is cancelled.</p>
-                    <Link href="/" className="mt-2 inline-block font-semibold text-accent underline underline-offset-4">
+                    <Link href="/" className="mt-2 inline-block font-medium text-accent underline decoration-accent/30 underline-offset-4 hover:decoration-accent">
                       Find another card
                     </Link>
                   </>
@@ -137,7 +142,7 @@ export function ListingView() {
                 <h2 id="action-heading" className="font-display text-xl font-bold">
                   {listing.status === "sold" ? "This card has been sold" : "This card is no longer for sale"}
                 </h2>
-                <Link href="/" className="mt-2 inline-block font-semibold text-accent underline underline-offset-4">
+                <Link href="/" className="mt-2 inline-block font-medium text-accent underline decoration-accent/30 underline-offset-4 hover:decoration-accent">
                   Find another card
                 </Link>
               </>
@@ -151,7 +156,7 @@ export function ListingView() {
                     ? "No open offers yet."
                     : `${openOfferCount === 1 ? "1 open offer" : `${openOfferCount} open offers`} on this card.`}{" "}
                   {openOfferCount > 0 && (
-                    <Link href="/offers" className="font-semibold text-accent underline underline-offset-4">
+                    <Link href="/offers" className="font-medium text-accent underline decoration-accent/30 underline-offset-4 hover:decoration-accent">
                       Review offers
                     </Link>
                   )}
@@ -162,7 +167,7 @@ export function ListingView() {
                     const result = withdrawListing(listing.id);
                     show(result.ok ? "Listing removed" : result.error, result.ok ? "done" : "error");
                   }}
-                  className="mt-4 rounded-full border-2 border-decline px-4 py-2 font-semibold text-decline hover:bg-decline hover:text-white"
+                  className="mt-4 rounded-full border border-decline/50 px-4 py-2 font-semibold text-decline hover:bg-decline hover:text-white"
                 >
                   Remove listing
                 </button>
@@ -178,7 +183,7 @@ export function ListingView() {
                 </h2>
                 <Link
                   href={`/offers?offer=${myOpenOffer.id}`}
-                  className="mt-2 inline-block font-semibold text-accent underline underline-offset-4"
+                  className="mt-2 inline-block font-medium text-accent underline decoration-accent/30 underline-offset-4 hover:decoration-accent"
                 >
                   View your offer
                 </Link>
