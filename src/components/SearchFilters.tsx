@@ -124,7 +124,7 @@ export function SearchFilters({
           </select>
         </label>
         <label
-          className={`${chip} flex items-center gap-1 py-0 pr-2 focus-within:outline-2 focus-within:outline-offset-3 focus-within:outline-accent ${
+          className={`${chip} flex items-center gap-1 pr-2 focus-within:outline-2 focus-within:outline-offset-3 focus-within:outline-accent ${
             filters.maxPrice ? setTint : chipOff
           }`}
         >
@@ -136,7 +136,7 @@ export function SearchFilters({
             value={filters.maxPrice}
             onChange={(e) => update("maxPrice", e.target.value)}
             placeholder="any"
-            className="tabular w-16 bg-transparent py-2 focus-visible:outline-none"
+            className="tabular w-14 bg-transparent focus-visible:outline-none"
           />
         </label>
         <label
