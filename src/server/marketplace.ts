@@ -93,7 +93,11 @@ export function marketFor(viewer: string | null): MarketData {
     if (full.items[id]) shown.set(id, owner || shown.get(id) === true);
   };
   for (const item of Object.values(full.items)) if (item.ownerId === viewer) show(item.id, true);
-  for (const partner of partners) for (const item of rules.tradeableItems(full, partner)) show(item.id, true);
+  // A card someone bought would reveal the buyer through its old listing, so it stays out of their binder.
+  const changedHands = new Set(Object.values(listings).flatMap((l) => (full.items[l.itemId]?.ownerId === l.sellerId ? [] : [l.itemId])));
+  for (const partner of partners) {
+    for (const item of rules.tradeableItems(full, partner)) if (!changedHands.has(item.id)) show(item.id, true);
+  }
   for (const l of Object.values(listings)) {
     show(l.itemId, full.items[l.itemId]?.ownerId === l.sellerId && (l.status === "active" || l.status === "trading"));
   }
