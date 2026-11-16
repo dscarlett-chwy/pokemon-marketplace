@@ -173,6 +173,12 @@ h4 {
     box-shadow 450ms var(--ease-out-soft);
 }
 
+/* Older sets were scanned at slightly different proportions; hold one shape so the rows of names line up. */
+.card-foil img {
+  aspect-ratio: 245 / 342;
+  object-fit: cover;
+}
+
 .card-foil::after {
   content: "";
   position: absolute;
