@@ -13,7 +13,7 @@ export function SignInPrompt({ title, children }: { title: string; children: Rea
       <SignInButton mode="modal">
         <button
           type="button"
-          className="mt-4 rounded-md bg-cardback px-5 py-3 font-bold text-white shadow-[0_3px_0_var(--color-cardback-deep)] hover:bg-cardback-deep"
+          className="mt-4 rounded-md bg-accent px-5 py-3 font-bold text-white shadow-[0_3px_0_var(--color-accent-deep)] hover:bg-accent-deep"
         >
           Sign in
         </button>

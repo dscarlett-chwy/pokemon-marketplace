@@ -6,7 +6,7 @@ import { CardImage } from "./CardImage";
 export function CardTile({ row, isMine, priority }: { row: ListingRow; isMine: boolean; priority?: boolean }) {
   const { listing, item, card, seller } = row;
   return (
-    <li className="pocket">
+    <li>
       <Link href={`/listings/${listing.id}`} className="group block p-3 sm:p-4">
         <div className="mx-auto max-w-[245px]">
           <CardImage card={card} sizes="(min-width: 768px) 245px, 45vw" priority={priority} />
@@ -24,7 +24,7 @@ export function CardTile({ row, isMine, priority }: { row: ListingRow; isMine: b
           {item.condition}
           {listing.openToTrades ? ", takes trades" : ", cash only"}
         </p>
-        <p className="mt-2 text-sm font-semibold text-cardback">{isMine ? "Your listing" : `Sold by ${seller.name}`}</p>
+        <p className="mt-2 text-sm font-semibold text-accent">{isMine ? "Your listing" : `Sold by ${seller.name}`}</p>
       </Link>
     </li>
   );

@@ -40,7 +40,7 @@ function statusLabel(row: DealRow) {
 
 const STATUS_STYLE: Record<Bucket, string> = {
   pending: "text-ink-soft",
-  "in-progress": "text-cardback",
+  "in-progress": "text-accent",
   completed: "text-accept",
   declined: "text-decline",
   closed: "text-ink-soft",
@@ -58,7 +58,7 @@ function DealItem({ row }: { row: DealRow }) {
     <li>
       <Link
         href={`/offers?offer=${offer.id}`}
-        className="flex items-center gap-3 rounded-lg border-2 border-transparent bg-white/60 p-3 hover:border-cardback/30 hover:bg-white"
+        className="flex items-center gap-3 rounded-lg border-2 border-transparent bg-white/60 p-3 hover:border-accent/30 hover:bg-white"
       >
         <span className="w-12 shrink-0">
           <CardImage card={card} sizes="48px" />
@@ -71,7 +71,7 @@ function DealItem({ row }: { row: DealRow }) {
         <span className="tabular hidden shrink-0 text-sm text-ink-soft sm:block">{when}</span>
         <span
           className={`shrink-0 rounded-full px-2.5 py-0.5 text-sm font-semibold ${
-            row.myTurn ? "bg-frame text-ink" : STATUS_STYLE[row.bucket]
+            row.myTurn ? "bg-accent text-white" : STATUS_STYLE[row.bucket]
           }`}
         >
           {statusLabel(row)}
@@ -150,17 +150,17 @@ export function DashboardView() {
         <p className="mt-1 text-lg text-ink-soft">{user.name}&apos;s sales and trades</p>
       </div>
 
-      <dl className="binder-sheet grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-4">
+      <dl className="rounded-3xl border border-rule bg-surface p-5 shadow-panel sm:p-7 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-4">
         <div className="col-span-2 sm:col-span-4 sm:border-b sm:border-rule sm:pb-5">
           <dt className="text-ink-soft">Cash from sales</dt>
-          <dd className="tabular font-display text-5xl font-extrabold tracking-tight text-cardback sm:text-6xl">
+          <dd className="tabular font-display text-5xl font-extrabold tracking-tight text-accent sm:text-6xl">
             {formatMoney(stats.cashFromSales)}
           </dd>
         </div>
         <Stat label="Cards sold" value={stats.cardsSold} />
         <Stat label="Cards received in trades" value={stats.cardsReceived} />
         <Stat label="Active listings" value={stats.activeListings} href="/inventory" />
-        <div className={stats.waitingOnMe > 0 ? "-m-2 rounded-md bg-frame p-2" : undefined}>
+        <div className={stats.waitingOnMe > 0 ? "-m-2 rounded-xl bg-accent-tint p-2" : undefined}>
           <dt className={stats.waitingOnMe > 0 ? "text-ink" : "text-ink-soft"}>Waiting on you</dt>
           <dd className="tabular font-display text-3xl font-bold">
             {stats.waitingOnMe > 0 ? (
@@ -188,7 +188,7 @@ export function DashboardView() {
                 aria-selected={side === party}
                 onClick={() => setSide(party)}
                 className={`-mb-px border-b-4 px-3 py-1.5 font-semibold ${
-                  side === party ? "border-cardback text-ink" : "border-transparent text-ink-soft hover:text-ink"
+                  side === party ? "border-accent text-ink" : "border-transparent text-ink-soft hover:text-ink"
                 }`}
               >
                 {label}
@@ -208,7 +208,7 @@ export function DashboardView() {
                 aria-pressed={selected}
                 onClick={() => setBucket(b)}
                 className={`tabular rounded-full border-2 px-3 py-1 text-sm font-semibold ${
-                  selected ? "border-cardback bg-cardback text-white" : "border-rule bg-white/60 text-ink hover:border-cardback/40"
+                  selected ? "border-accent bg-accent text-white" : "border-rule bg-white/60 text-ink hover:border-accent/40"
                 }`}
               >
                 {label} {count}
@@ -235,7 +235,7 @@ export function DashboardView() {
         {stats.sales.length === 0 ? (
           <p className="py-4 text-lg">
             No sales yet. When a trade on one of your cards is completed, it&apos;s recorded here.{" "}
-            <Link href="/inventory" className="font-semibold text-cardback underline underline-offset-4">
+            <Link href="/inventory" className="font-semibold text-accent underline underline-offset-4">
               List a card
             </Link>
           </p>

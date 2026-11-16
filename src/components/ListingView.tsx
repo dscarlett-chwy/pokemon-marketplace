@@ -29,7 +29,7 @@ export function ListingView() {
     return (
       <div className="space-y-3">
         <h1 className="font-display text-title font-bold">This listing doesn&apos;t exist</h1>
-        <Link href="/" className="font-semibold text-cardback underline underline-offset-4">
+        <Link href="/" className="font-semibold text-accent underline underline-offset-4">
           Back to the marketplace
         </Link>
       </div>
@@ -45,12 +45,12 @@ export function ListingView() {
 
   return (
     <div className="space-y-6">
-      <Link href="/" className="inline-block font-semibold text-cardback underline underline-offset-4">
+      <Link href="/" className="inline-block font-semibold text-accent underline underline-offset-4">
         Back to the marketplace
       </Link>
 
       <div className="grid gap-8 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-        <div className="pocket self-start p-4">
+        <div className="self-start">
           <CardImage card={card} large sizes="(min-width: 768px) 420px, 90vw" priority />
         </div>
 
@@ -97,13 +97,13 @@ export function ListingView() {
           </dl>
 
           {listing.note && (
-            <blockquote className="border-l-4 border-frame pl-4 text-lg">
+            <blockquote className="border-l-4 border-accent pl-4 text-lg">
               {listing.note}
               <footer className="mt-1 text-sm text-ink-soft">{isMine ? "Your note" : `${seller.name}'s note`}</footer>
             </blockquote>
           )}
 
-          <section aria-labelledby="action-heading" className="rounded-lg border border-rule bg-sheet p-5">
+          <section aria-labelledby="action-heading" className="rounded-3xl border border-rule bg-surface p-5 shadow-panel sm:p-7">
             {listing.status === "trading" ? (
               <>
                 <h2 id="action-heading" className="font-display text-xl font-bold">
@@ -117,7 +117,7 @@ export function ListingView() {
                     </p>
                     <Link
                       href={`/offers?offer=${myTrade.id}`}
-                      className="mt-2 inline-block font-semibold text-cardback underline underline-offset-4"
+                      className="mt-2 inline-block font-semibold text-accent underline underline-offset-4"
                     >
                       View trade
                     </Link>
@@ -125,7 +125,7 @@ export function ListingView() {
                 ) : (
                   <>
                     <p className="mt-1">{seller.name} is trading it with another collector. It comes back on sale if that trade is cancelled.</p>
-                    <Link href="/" className="mt-2 inline-block font-semibold text-cardback underline underline-offset-4">
+                    <Link href="/" className="mt-2 inline-block font-semibold text-accent underline underline-offset-4">
                       Find another card
                     </Link>
                   </>
@@ -136,7 +136,7 @@ export function ListingView() {
                 <h2 id="action-heading" className="font-display text-xl font-bold">
                   {listing.status === "sold" ? "This card has been sold" : "This card is no longer for sale"}
                 </h2>
-                <Link href="/" className="mt-2 inline-block font-semibold text-cardback underline underline-offset-4">
+                <Link href="/" className="mt-2 inline-block font-semibold text-accent underline underline-offset-4">
                   Find another card
                 </Link>
               </>
@@ -150,7 +150,7 @@ export function ListingView() {
                     ? "No open offers yet."
                     : `${openOfferCount === 1 ? "1 open offer" : `${openOfferCount} open offers`} on this card.`}{" "}
                   {openOfferCount > 0 && (
-                    <Link href="/offers" className="font-semibold text-cardback underline underline-offset-4">
+                    <Link href="/offers" className="font-semibold text-accent underline underline-offset-4">
                       Review offers
                     </Link>
                   )}
@@ -161,7 +161,7 @@ export function ListingView() {
                     const result = withdrawListing(listing.id);
                     show(result.ok ? "Listing removed" : result.error, result.ok ? "done" : "error");
                   }}
-                  className="mt-4 rounded-md border-2 border-decline px-4 py-2 font-semibold text-decline hover:bg-decline hover:text-white"
+                  className="mt-4 rounded-full border-2 border-decline px-4 py-2 font-semibold text-decline hover:bg-decline hover:text-white"
                 >
                   Remove listing
                 </button>
@@ -177,7 +177,7 @@ export function ListingView() {
                 </h2>
                 <Link
                   href={`/offers?offer=${myOpenOffer.id}`}
-                  className="mt-2 inline-block font-semibold text-cardback underline underline-offset-4"
+                  className="mt-2 inline-block font-semibold text-accent underline underline-offset-4"
                 >
                   View your offer
                 </Link>

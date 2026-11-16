@@ -64,7 +64,7 @@ export function OfferThread({ offer }: { offer: Offer }) {
             Asking {formatMoney(listing.askingPrice)}
             {myParty === "buyer" ? `, sold by ${other.name}` : `, offer from ${other.name}`}
           </p>
-          <Link href={`/listings/${listing.id}`} className="text-sm font-semibold text-cardback underline underline-offset-4">
+          <Link href={`/listings/${listing.id}`} className="text-sm font-semibold text-accent underline underline-offset-4">
             View listing
           </Link>
         </div>
@@ -76,7 +76,7 @@ export function OfferThread({ offer }: { offer: Offer }) {
           return (
             <li
               key={i}
-              className={`rounded-lg border p-4 ${mine ? "border-cardback/25 bg-cardback/5 sm:ml-10" : "border-rule bg-white sm:mr-10"}`}
+              className={`rounded-lg border p-4 ${mine ? "border-accent/25 bg-accent/5 sm:ml-10" : "border-rule bg-white sm:mr-10"}`}
             >
               <p className="text-sm text-ink-soft">
                 <span className="font-semibold text-ink">
@@ -93,7 +93,7 @@ export function OfferThread({ offer }: { offer: Offer }) {
         })}
       </ol>
 
-      <section aria-live="polite" className="rounded-lg border border-rule bg-sheet p-5">
+      <section aria-live="polite" className="rounded-3xl border border-rule bg-surface p-5 shadow-panel sm:p-7">
         {offer.trade ? (
           <TradeChecklist offer={{ ...offer, trade: offer.trade }} listing={listing} card={card} nameFor={nameFor} />
         ) : offer.status === "declined" ? (
@@ -143,11 +143,11 @@ export function OfferThread({ offer }: { offer: Offer }) {
                 onClick={() =>
                   run(() => acceptOffer(offer.id), "Offer accepted. Work through the checklist to finish the trade")
                 }
-                className="rounded-md bg-accept px-5 py-3 font-bold text-white hover:brightness-95"
+                className="rounded-full bg-accept px-5 py-3 font-semibold text-white hover:brightness-95"
               >
                 Yes, accept
               </button>
-              <button type="button" onClick={() => setMode("idle")} className="rounded-md px-4 py-3 font-semibold text-cardback hover:bg-white">
+              <button type="button" onClick={() => setMode("idle")} className="rounded-full px-4 py-3 font-semibold text-accent hover:bg-white">
                 Not yet
               </button>
             </div>
@@ -159,11 +159,11 @@ export function OfferThread({ offer }: { offer: Offer }) {
               <button
                 type="button"
                 onClick={() => run(() => declineOffer(offer.id), "Offer declined")}
-                className="rounded-md bg-decline px-5 py-3 font-bold text-white hover:brightness-95"
+                className="rounded-full bg-decline px-5 py-3 font-semibold text-white hover:brightness-95"
               >
                 Yes, decline
               </button>
-              <button type="button" onClick={() => setMode("idle")} className="rounded-md px-4 py-3 font-semibold text-cardback hover:bg-white">
+              <button type="button" onClick={() => setMode("idle")} className="rounded-full px-4 py-3 font-semibold text-accent hover:bg-white">
                 Not yet
               </button>
             </div>
@@ -178,21 +178,21 @@ export function OfferThread({ offer }: { offer: Offer }) {
               <button
                 type="button"
                 onClick={() => setMode("confirm-accept")}
-                className="rounded-md bg-accept px-5 py-3 font-bold text-white hover:brightness-95"
+                className="rounded-full bg-accept px-5 py-3 font-semibold text-white hover:brightness-95"
               >
                 Accept
               </button>
               <button
                 type="button"
                 onClick={() => setMode("counter")}
-                className="rounded-md bg-cardback px-5 py-3 font-bold text-white hover:bg-cardback-deep"
+                className="rounded-full bg-accent px-5 py-3 font-semibold text-white hover:bg-accent-deep"
               >
                 Counter
               </button>
               <button
                 type="button"
                 onClick={() => setMode("confirm-decline")}
-                className="rounded-md border-2 border-decline px-5 py-2.5 font-bold text-decline hover:bg-decline hover:text-white"
+                className="rounded-full border-2 border-decline px-5 py-2.5 font-bold text-decline hover:bg-decline hover:text-white"
               >
                 Decline
               </button>

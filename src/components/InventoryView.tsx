@@ -43,7 +43,7 @@ export function InventoryView() {
           <button
             type="button"
             onClick={() => setAdding(true)}
-            className="rounded-md bg-cardback px-5 py-3 font-bold text-white shadow-[0_3px_0_var(--color-cardback-deep)] hover:bg-cardback-deep"
+            className="rounded-full bg-accent px-5 py-3 font-semibold text-white hover:bg-accent-deep"
           >
             Add a card
           </button>
@@ -52,7 +52,7 @@ export function InventoryView() {
 
       {adding && <AddCardPanel onClose={() => setAdding(false)} />}
 
-      <div className="binder-sheet">
+      <div>
         {mine.length === 0 ? (
           <p className="py-12 text-center text-lg">Your binder is empty. Add a card to start selling or trading.</p>
         ) : (
@@ -61,7 +61,7 @@ export function InventoryView() {
               const card = cards[item.cardId];
               const listing = activeListingForItem(listings, item.id);
               return (
-                <li key={item.id} className="pocket flex flex-col p-3 sm:p-4">
+                <li key={item.id} className="flex flex-col">
                   <div className="mx-auto w-full max-w-[245px]">
                     <CardImage card={card} sizes="(min-width: 768px) 245px, 45vw" />
                   </div>
@@ -73,15 +73,15 @@ export function InventoryView() {
                     {locked.has(item.id) ? (
                       <Link
                         href={`/offers?offer=${locked.get(item.id)}`}
-                        className="inline-flex items-center gap-2 font-semibold text-cardback underline underline-offset-4"
+                        className="inline-flex items-center gap-2 font-semibold text-accent underline underline-offset-4"
                       >
-                        <span aria-hidden className="size-2.5 rounded-full bg-frame ring-2 ring-frame/40" />
+                        <span aria-hidden className="size-2.5 rounded-full bg-accent ring-2 ring-accent/25" />
                         In a trade
                       </Link>
                     ) : listing ? (
                       <Link
                         href={`/listings/${listing.id}`}
-                        className="tabular font-semibold text-cardback underline underline-offset-4"
+                        className="tabular font-semibold text-accent underline underline-offset-4"
                       >
                         Listed at {formatMoney(listing.askingPrice)}
                       </Link>
@@ -90,7 +90,7 @@ export function InventoryView() {
                         <button
                           type="button"
                           onClick={() => setListingItemId(item.id)}
-                          className="rounded-md border-2 border-cardback px-3 py-1.5 text-sm font-bold text-cardback hover:bg-cardback hover:text-white"
+                          className="rounded-full border-2 border-accent px-3 py-1.5 text-sm font-bold text-accent hover:bg-accent hover:text-white"
                         >
                           List for sale<span className="sr-only">: {card.name}</span>
                         </button>

@@ -81,12 +81,12 @@ export function OffersView() {
                 router.replace(pathname, { scroll: false });
               }}
               className={`-mb-px flex items-center gap-2 border-b-4 px-4 py-2 text-lg font-semibold ${
-                selected ? "border-cardback text-ink" : "border-transparent text-ink-soft hover:text-ink"
+                selected ? "border-accent text-ink" : "border-transparent text-ink-soft hover:text-ink"
               }`}
             >
               {label}
               {waiting > 0 && (
-                <span className="tabular rounded-full bg-frame px-2 text-sm leading-6 text-ink">
+                <span className="tabular rounded-full bg-accent px-2 text-sm leading-6 text-white">
                   {waiting}
                   <span className="sr-only"> waiting on you</span>
                 </span>
@@ -123,7 +123,7 @@ export function OffersView() {
                       onClick={() => select(offer.id)}
                       aria-current={current ? "true" : undefined}
                       className={`flex w-full items-center gap-3 rounded-lg border-2 p-3 text-left ${
-                        current ? "border-cardback bg-white" : "border-transparent bg-white/60 hover:bg-white"
+                        current ? "border-accent bg-white" : "border-transparent bg-white/60 hover:bg-white"
                       }`}
                     >
                       <span className="w-12 shrink-0">
@@ -139,7 +139,7 @@ export function OffersView() {
                       <span
                         className={`shrink-0 rounded-full px-2.5 py-0.5 text-sm font-semibold ${
                           r === 0
-                            ? "bg-frame text-ink"
+                            ? "bg-accent text-white"
                             : offer.trade?.status === "complete"
                               ? "text-accept"
                               : offer.status === "declined" || offer.trade?.status === "cancelled"

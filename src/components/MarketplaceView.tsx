@@ -60,7 +60,7 @@ export function MarketplaceView() {
               <button
                 type="button"
                 onClick={() => setFilters(EMPTY_FILTERS)}
-                className="rounded-md px-2 py-1 text-sm font-semibold text-cardback underline underline-offset-4"
+                className="rounded-full px-2 py-1 text-sm font-semibold text-accent underline underline-offset-4"
               >
                 Clear filters
               </button>
@@ -68,13 +68,13 @@ export function MarketplaceView() {
           </div>
 
           {results.length === 0 ? (
-            <div className="binder-sheet">
+            <div>
               <p className="py-12 text-center text-lg">
                 No cards match. Try a different name, or clear the filters to see every card for sale.
               </p>
             </div>
           ) : (
-            <div className="binder-sheet">
+            <div>
               <ul className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3">
                 {results.map((row, i) => (
                   <CardTile key={row.listing.id} row={row} isMine={row.listing.sellerId === me} priority={i < 3} />

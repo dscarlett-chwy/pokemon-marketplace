@@ -21,7 +21,7 @@ export function SiteFooter() {
               resetDemo();
               show("Demo data reset");
             }}
-            className="rounded-md px-2 py-1 font-semibold text-cardback underline underline-offset-4 hover:text-cardback-deep"
+            className="rounded-full px-2 py-1 font-semibold text-accent underline underline-offset-4 hover:text-accent-deep"
           >
             Reset demo data
           </button>

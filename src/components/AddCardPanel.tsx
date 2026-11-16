@@ -21,7 +21,7 @@ function ResultRow({ card }: { card: Card }) {
   const [condition, setCondition] = useState<Condition>("Near mint");
 
   return (
-    <li className="pocket flex gap-3 p-3">
+    <li className="flex gap-3 rounded-2xl border border-rule bg-white p-3">
       <div className="w-20 shrink-0">
         <CardImage card={card} sizes="80px" />
       </div>
@@ -41,7 +41,7 @@ function ResultRow({ card }: { card: Card }) {
             <select
               value={condition}
               onChange={(e) => setCondition(e.target.value as Condition)}
-              className="rounded-md border border-rule bg-white px-2 py-1.5 text-sm"
+              className="rounded-xl border border-rule bg-white px-2 py-1.5 text-sm"
             >
               {CONDITIONS.map((c) => (
                 <option key={c}>{c}</option>
@@ -54,7 +54,7 @@ function ResultRow({ card }: { card: Card }) {
               addCard(card, condition);
               show(`Added ${card.name} to your cards`);
             }}
-            className="rounded-md bg-cardback px-3 py-1.5 text-sm font-bold text-white hover:bg-cardback-deep"
+            className="rounded-full bg-accent px-3 py-1.5 text-sm font-semibold text-white hover:bg-accent-deep"
           >
             Add to my cards<span className="sr-only">: {card.name}, {card.set.name} #{card.number}</span>
           </button>
@@ -88,7 +88,7 @@ export function AddCardPanel({ onClose }: { onClose: () => void }) {
   }, [term, attempt]);
 
   return (
-    <section aria-labelledby="add-card-heading" className="rounded-lg border border-rule bg-sheet p-5">
+    <section aria-labelledby="add-card-heading" className="rounded-3xl border border-rule bg-surface p-5 shadow-panel sm:p-7">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 id="add-card-heading" className="font-display text-xl font-bold">
@@ -96,7 +96,7 @@ export function AddCardPanel({ onClose }: { onClose: () => void }) {
           </h2>
           <p className="text-ink-soft">Search the full Pokemon card catalog, then pick the condition of your copy.</p>
         </div>
-        <button type="button" onClick={onClose} className="rounded-md px-3 py-1.5 font-semibold text-cardback hover:bg-white">
+        <button type="button" onClick={onClose} className="rounded-full px-3 py-1.5 font-semibold text-accent hover:bg-white">
           Done
         </button>
       </div>
@@ -108,7 +108,7 @@ export function AddCardPanel({ onClose }: { onClose: () => void }) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Card name, like Gengar"
-          className="w-full rounded-lg border-2 border-cardback bg-white px-4 py-3 text-lg"
+          className="w-full rounded-lg border-2 border-accent bg-white px-4 py-3 text-lg"
         />
       </label>
 

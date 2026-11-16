@@ -26,7 +26,7 @@ function Check({ state }: { state: "done" | "ready" | "waiting" }) {
   return (
     <span
       aria-hidden
-      className={`mt-0.5 size-6 shrink-0 rounded-full border-2 ${state === "ready" ? "border-frame bg-frame/30" : "border-rule"}`}
+      className={`mt-0.5 size-6 shrink-0 rounded-full border-2 ${state === "ready" ? "border-accent bg-accent-tint" : "border-rule"}`}
     />
   );
 }
@@ -147,11 +147,11 @@ export function TradeChecklist({
 
       {online && (
         <p
-          className={`tabular rounded-md border-2 border-dashed px-4 py-3 ${
+          className={`tabular rounded-xl border-2 border-dashed px-4 py-3 ${
             trade.status === "complete"
               ? "border-accept/40 bg-accept/10"
               : paid && trade.status === "active"
-                ? "border-frame bg-frame/15"
+                ? "border-accent bg-accent-tint"
                 : "border-rule bg-white/60"
           }`}
         >
@@ -210,14 +210,14 @@ export function TradeChecklist({
                                 <button
                                   type="button"
                                   onClick={() => act(s)}
-                                  className="rounded-md bg-accept px-4 py-2 font-bold text-white hover:brightness-95"
+                                  className="rounded-full bg-accept px-4 py-2 font-semibold text-white hover:brightness-95"
                                 >
                                   Yes, I got it
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => setConfirming(null)}
-                                  className="rounded-md px-3 py-2 font-semibold text-cardback hover:bg-white"
+                                  className="rounded-full px-3 py-2 font-semibold text-accent hover:bg-white"
                                 >
                                   Not yet
                                 </button>
@@ -227,7 +227,7 @@ export function TradeChecklist({
                             <button
                               type="button"
                               onClick={() => (s.step === "receive" ? setConfirming("receive") : act(s))}
-                              className="mt-2 rounded-md bg-cardback px-4 py-2 font-bold text-white shadow-[0_3px_0_var(--color-cardback-deep)] hover:bg-cardback-deep"
+                              className="mt-2 rounded-full bg-accent px-4 py-2 font-semibold text-white hover:bg-accent-deep"
                             >
                               {s.step === "pay"
                                 ? `Pay ${formatMoney(money!.cash)}`
@@ -259,14 +259,14 @@ export function TradeChecklist({
               <button
                 type="button"
                 onClick={() => run(cancelTrade(offer.id), "Trade cancelled")}
-                className="rounded-md bg-decline px-5 py-3 font-bold text-white hover:brightness-95"
+                className="rounded-full bg-decline px-5 py-3 font-semibold text-white hover:brightness-95"
               >
                 Yes, cancel trade
               </button>
               <button
                 type="button"
                 onClick={() => setConfirming(null)}
-                className="rounded-md px-4 py-3 font-semibold text-cardback hover:bg-white"
+                className="rounded-full px-4 py-3 font-semibold text-accent hover:bg-white"
               >
                 Keep trade
               </button>
@@ -277,7 +277,7 @@ export function TradeChecklist({
             <button
               type="button"
               onClick={() => setConfirming("cancel")}
-              className="rounded-md border-2 border-decline px-4 py-2 font-semibold text-decline hover:bg-decline hover:text-white"
+              className="rounded-full border-2 border-decline px-4 py-2 font-semibold text-decline hover:bg-decline hover:text-white"
             >
               Cancel trade
             </button>

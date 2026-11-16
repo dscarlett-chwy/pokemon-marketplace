@@ -57,7 +57,7 @@ export function ListCardDialog({ item, card, onClose }: { item: OwnedCard; card:
       ref={ref}
       onClose={onClose}
       aria-labelledby="list-heading"
-      className="m-auto w-[min(32rem,calc(100%-2rem))] rounded-lg bg-sheet p-0 text-ink backdrop:bg-ink/60"
+      className="m-auto w-[min(32rem,calc(100%-2rem))] rounded-lg bg-surface p-0 text-ink backdrop:bg-ink/60"
     >
       <form onSubmit={submit} className="space-y-4 p-5" noValidate>
         <div className="flex gap-4">
@@ -79,7 +79,7 @@ export function ListCardDialog({ item, card, onClose }: { item: OwnedCard; card:
 
         <label className="block">
           <span className="font-semibold">Asking price</span>
-          <span className="mt-1 flex items-center rounded-md border border-rule bg-white focus-within:outline-3 focus-within:outline-frame">
+          <span className="mt-1 flex items-center rounded-xl border border-rule bg-white focus-within:outline-2 focus-within:outline-accent">
             <span aria-hidden className="pl-3 text-lg text-ink-soft">
               $
             </span>
@@ -91,7 +91,7 @@ export function ListCardDialog({ item, card, onClose }: { item: OwnedCard; card:
               required
               value={price}
               onChange={(e) => setPrice(e.target.value)}
-              className="tabular w-full rounded-md bg-transparent px-2 py-2 text-lg focus-visible:shadow-none focus-visible:outline-none"
+              className="tabular w-full rounded-xl bg-transparent px-2 py-2 text-lg focus-visible:shadow-none focus-visible:outline-none"
             />
           </span>
         </label>
@@ -101,7 +101,7 @@ export function ListCardDialog({ item, card, onClose }: { item: OwnedCard; card:
             type="checkbox"
             checked={openToTrades}
             onChange={(e) => setOpenToTrades(e.target.checked)}
-            className="mt-1 size-5 accent-cardback"
+            className="mt-1 size-5 accent-accent"
           />
           <span>
             <span className="font-semibold">Open to trades</span>
@@ -119,7 +119,7 @@ export function ListCardDialog({ item, card, onClose }: { item: OwnedCard; card:
                   type="checkbox"
                   checked={methods.includes(m)}
                   onChange={() => toggleMethod(m)}
-                  className="mt-1 size-5 accent-cardback"
+                  className="mt-1 size-5 accent-accent"
                 />
                 <span>
                   <span className="font-semibold">{METHOD_LABELS[m]}</span>
@@ -139,7 +139,7 @@ export function ListCardDialog({ item, card, onClose }: { item: OwnedCard; card:
               onChange={(e) => setArea(e.target.value)}
               maxLength={MAX_AREA}
               placeholder="Cerulean City"
-              className="mt-1 w-full rounded-md border border-rule bg-white px-3 py-2"
+              className="mt-1 w-full rounded-xl border border-rule bg-white px-3 py-2"
             />
           </label>
         )}
@@ -153,7 +153,7 @@ export function ListCardDialog({ item, card, onClose }: { item: OwnedCard; card:
             rows={2}
             maxLength={280}
             placeholder="Centering, whitening, how it was stored"
-            className="mt-1 w-full rounded-md border border-rule bg-white px-3 py-2"
+            className="mt-1 w-full rounded-xl border border-rule bg-white px-3 py-2"
           />
         </label>
 
@@ -166,11 +166,11 @@ export function ListCardDialog({ item, card, onClose }: { item: OwnedCard; card:
         <div className="flex flex-wrap gap-3">
           <button
             type="submit"
-            className="rounded-md bg-cardback px-5 py-3 font-bold text-white shadow-[0_3px_0_var(--color-cardback-deep)] hover:bg-cardback-deep"
+            className="rounded-full bg-accent px-5 py-3 font-semibold text-white hover:bg-accent-deep"
           >
             List for sale
           </button>
-          <button type="button" onClick={() => ref.current?.close()} className="rounded-md px-4 py-3 font-semibold text-cardback hover:bg-white">
+          <button type="button" onClick={() => ref.current?.close()} className="rounded-full px-4 py-3 font-semibold text-accent hover:bg-white">
             Cancel
           </button>
         </div>

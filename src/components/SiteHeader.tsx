@@ -33,13 +33,13 @@ function NavLinks({ active }: { active: string | null }) {
             <Link
               href={href}
               aria-current={current ? "page" : undefined}
-              className={`flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-2 text-base font-semibold ${
-                current ? "bg-white/15 text-frame" : "text-white/85 hover:bg-white/10 hover:text-white"
+              className={`flex items-center gap-2 whitespace-nowrap rounded-full px-3 py-2 text-base font-semibold ${
+                current ? "bg-white/15 text-accent" : "text-white/85 hover:bg-white/10 hover:text-white"
               }`}
             >
               {label}
               {href === "/offers" && waiting > 0 && (
-                <span className="tabular rounded-full bg-frame px-2 text-sm leading-6 text-ink">
+                <span className="tabular rounded-full bg-accent px-2 text-sm leading-6 text-white">
                   {waiting}
                   <span className="sr-only"> waiting on you</span>
                 </span>
@@ -58,7 +58,7 @@ function ActiveNav() {
 
 export function SiteHeader() {
   return (
-    <header className="bg-cardback text-white">
+    <header className="bg-accent text-white">
       <nav
         aria-label="Main"
         className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-4 py-3 sm:px-6"

@@ -23,7 +23,7 @@ export const EMPTY_FILTERS: Filters = {
   sort: "newest",
 };
 
-const field = "w-full rounded-md border border-rule bg-white px-3 py-2 text-base text-ink";
+const field = "w-full rounded-xl border border-rule bg-white px-3 py-2 text-base text-ink";
 
 export function SearchFilters({
   filters,
@@ -47,7 +47,7 @@ export function SearchFilters({
           value={filters.query}
           onChange={(e) => update("query", e.target.value)}
           placeholder="Search by card or set, like Charizard or Evolving Skies"
-          className="w-full rounded-lg border-2 border-cardback bg-white px-4 py-3 text-lg text-ink placeholder:text-ink-soft/70"
+          className="w-full rounded-lg border-2 border-accent bg-white px-4 py-3 text-lg text-ink placeholder:text-ink-soft/70"
         />
       </label>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -113,7 +113,7 @@ export function SearchFilters({
             type="checkbox"
             checked={filters.tradesOnly}
             onChange={(e) => update("tradesOnly", e.target.checked)}
-            className="size-5 accent-cardback"
+            className="size-5 accent-accent"
           />
           Takes trades
         </label>

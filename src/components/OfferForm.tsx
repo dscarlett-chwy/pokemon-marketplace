@@ -23,7 +23,7 @@ function CashInput({ value, onChange }: { value: string; onChange: (value: strin
   return (
     <label className="block">
       <span className="text-sm font-semibold">Cash</span>
-      <span className="mt-1 flex items-center rounded-md border border-rule bg-white focus-within:outline-3 focus-within:outline-frame">
+      <span className="mt-1 flex items-center rounded-xl border border-rule bg-white focus-within:outline-2 focus-within:outline-accent">
         <span aria-hidden className="pl-3 text-lg text-ink-soft">
           $
         </span>
@@ -35,7 +35,7 @@ function CashInput({ value, onChange }: { value: string; onChange: (value: strin
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder="0"
-          className="tabular w-full rounded-md bg-transparent px-2 py-2 text-lg focus-visible:shadow-none focus-visible:outline-none"
+          className="tabular w-full rounded-xl bg-transparent px-2 py-2 text-lg focus-visible:shadow-none focus-visible:outline-none"
         />
       </span>
     </label>
@@ -67,15 +67,15 @@ function CardPicker({ ownerId, picked, onToggle }: { ownerId: string; picked: st
             return (
               <li key={item.id}>
                 <label
-                  className={`block cursor-pointer rounded-md border-2 p-1.5 has-focus-visible:outline-3 has-focus-visible:outline-frame ${
-                    on ? "border-cardback bg-cardback/10" : "border-transparent hover:border-rule"
+                  className={`block cursor-pointer rounded-xl border-2 p-1.5 has-focus-visible:outline-2 has-focus-visible:outline-accent ${
+                    on ? "border-accent bg-accent/10" : "border-transparent hover:border-rule"
                   }`}
                 >
                   <input type="checkbox" checked={on} onChange={() => onToggle(item.id)} className="sr-only" />
                   <CardImage card={card} sizes="120px" />
                   <span className="mt-1 block truncate text-sm font-semibold">{card.name}</span>
                   <span className="block truncate text-xs text-ink-soft">{item.condition}</span>
-                  {on && <span className="block text-xs font-semibold text-cardback">Added</span>}
+                  {on && <span className="block text-xs font-semibold text-accent">Added</span>}
                 </label>
               </li>
             );
@@ -181,7 +181,7 @@ export function OfferForm({
               <button
                 type="button"
                 onClick={() => setSellerOpen(false)}
-                className="text-sm font-semibold text-cardback underline underline-offset-4"
+                className="text-sm font-semibold text-accent underline underline-offset-4"
               >
                 Remove {names.seller === "You" ? "your" : `${names.seller}'s`} extras
               </button>
@@ -190,7 +190,7 @@ export function OfferForm({
             <button
               type="button"
               onClick={() => setSellerOpen(true)}
-              className="rounded-md border-2 border-dashed border-cardback/50 px-3 py-2 text-sm font-semibold text-cardback hover:border-cardback hover:bg-white"
+              className="rounded-xl border-2 border-dashed border-accent/50 px-3 py-2 text-sm font-semibold text-accent hover:border-accent hover:bg-white"
             >
               {names.seller === "You" ? "Add your cash or cards" : `Ask ${names.seller} to add cash or cards`}
             </button>
@@ -203,8 +203,8 @@ export function OfferForm({
           {listing.exchangeMethods.map((m) => (
             <label
               key={m}
-              className={`cursor-pointer rounded-md border-2 px-3 py-2 has-focus-visible:outline-3 has-focus-visible:outline-frame ${
-                method === m ? "border-cardback bg-cardback/10 font-semibold" : "border-rule bg-white hover:border-cardback/50"
+              className={`cursor-pointer rounded-xl border-2 px-3 py-2 has-focus-visible:outline-2 has-focus-visible:outline-accent ${
+                method === m ? "border-accent bg-accent/10 font-semibold" : "border-rule bg-white hover:border-accent/50"
               }`}
             >
               <input
@@ -233,7 +233,7 @@ export function OfferForm({
                     name="exchange-paid-by"
                     checked={paidBy === p}
                     onChange={() => setPaidBy(p)}
-                    className="size-5 accent-cardback"
+                    className="size-5 accent-accent"
                   />
                   {names[p]}
                 </label>
@@ -249,7 +249,7 @@ export function OfferForm({
               onChange={(e) => setMeetup(e.target.value)}
               maxLength={MAX_MEETUP}
               placeholder="Library steps, Saturday morning"
-              className="mt-1 w-full rounded-md border border-rule bg-white px-3 py-2"
+              className="mt-1 w-full rounded-xl border border-rule bg-white px-3 py-2"
             />
           </label>
         )}
@@ -266,7 +266,7 @@ export function OfferForm({
                   name="payment-method"
                   checked={terms.payment === p}
                   onChange={() => setPayment(p)}
-                  className="mt-1 size-5 accent-cardback"
+                  className="mt-1 size-5 accent-accent"
                 />
                 <span>
                   <span className="font-semibold">{p === "online" ? "Online through Trade Binder" : "In person"}</span>
@@ -290,11 +290,11 @@ export function OfferForm({
           onChange={(e) => setMessage(e.target.value)}
           rows={2}
           maxLength={280}
-          className="mt-1 w-full rounded-md border border-rule bg-white px-3 py-2"
+          className="mt-1 w-full rounded-xl border border-rule bg-white px-3 py-2"
         />
       </label>
 
-      <div className="tabular rounded-md bg-white/70 p-3 text-base">
+      <div className="tabular rounded-xl bg-white/70 p-3 text-base">
         <p>
           <span className="font-semibold">{givesLabel(names.buyer)}</span> about {formatMoney(Math.round(buyerValue))}.{" "}
           <span className="font-semibold">{givesLabel(names.seller)}</span> about {formatMoney(Math.round(sellerValue))}.
@@ -313,12 +313,12 @@ export function OfferForm({
       <div className="flex flex-wrap gap-3">
         <button
           type="submit"
-          className="rounded-md bg-cardback px-5 py-3 text-base font-bold text-white shadow-[0_3px_0_var(--color-cardback-deep)] hover:bg-cardback-deep"
+          className="rounded-full bg-accent px-5 py-3 text-base font-semibold text-white hover:bg-accent-deep"
         >
           {submitLabel}
         </button>
         {onCancel && (
-          <button type="button" onClick={onCancel} className="rounded-md px-4 py-3 font-semibold text-cardback hover:bg-white">
+          <button type="button" onClick={onCancel} className="rounded-full px-4 py-3 font-semibold text-accent hover:bg-white">
             Cancel
           </button>
         )}
