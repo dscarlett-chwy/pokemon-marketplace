@@ -24,7 +24,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <ClerkProvider>
           <StoreHydrator />
           <SiteHeader />
-          <main className="mx-auto w-full max-w-6xl flex-1 px-4 pt-8 sm:px-6">{children}</main>
+          <main className="mx-auto w-full max-w-6xl flex-1 px-4 pt-8 sm:px-6 sm:pt-12">{children}</main>
           <SiteFooter />
           <Toaster />
         </ClerkProvider>

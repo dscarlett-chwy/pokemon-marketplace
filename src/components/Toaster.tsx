@@ -18,8 +18,8 @@ export function Toaster() {
       {notice && (
         <p
           key={notice.id}
-          className={`pointer-events-auto rounded-full px-4 py-3 text-base font-semibold text-white shadow-[0_6px_0_var(--color-accent-deep)] ${
-            notice.tone === "error" ? "bg-decline" : "bg-accent"
+          className={`pointer-events-auto toast rounded-full px-5 py-3 text-[0.9375rem] font-medium text-paper shadow-lift ${
+            notice.tone === "error" ? "bg-decline" : "bg-ink"
           }`}
         >
           {notice.text}

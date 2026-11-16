@@ -10,8 +10,8 @@ export function SiteFooter() {
   const canReset = signedIn && process.env.NODE_ENV !== "production";
 
   return (
-    <footer className="mt-16 border-t border-rule">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-6 text-sm text-ink-soft sm:px-6">
+    <footer className="mt-20 border-t border-rule pb-20 md:pb-0">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-8 text-sm text-ink-soft sm:px-6">
         <p>Card data and images from the Pokemon TCG API. Listings and offers are shared with everyone on this site.</p>
         {canReset && (
           <button
