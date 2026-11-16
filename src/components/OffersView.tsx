@@ -64,9 +64,9 @@ export function OffersView() {
 
   return (
     <div className="space-y-6">
-      <h1 className="font-display text-display font-extrabold tracking-tight">Offers</h1>
+      <h1 className="font-display text-display font-bold">Offers</h1>
 
-      <div role="tablist" aria-label="Offers" className="flex gap-2 border-b border-rule">
+      <div role="tablist" aria-label="Offers" className="inline-flex gap-1 rounded-full bg-ink/5 p-1">
         {TABS.map(({ party, label }) => {
           const waiting = mine.filter((o) => partyOf(o, me) === party && rank(o, me) === 0).length;
           const selected = tab === party;
@@ -81,13 +81,13 @@ export function OffersView() {
                 setTabChoice(party);
                 router.replace(pathname, { scroll: false });
               }}
-              className={`-mb-px flex items-center gap-2 border-b-4 px-4 py-2 text-lg font-semibold ${
-                selected ? "border-accent text-ink" : "border-transparent text-ink-soft hover:text-ink"
+              className={`flex items-center gap-2 rounded-full px-4 py-2 text-[0.9375rem] font-medium ${
+                selected ? "bg-white text-ink shadow-card" : "text-ink-soft hover:text-ink"
               }`}
             >
               {label}
               {waiting > 0 && (
-                <span className="tabular rounded-full bg-accent px-2 text-sm leading-6 text-white">
+                <span className="tabular rounded-full bg-accent px-2 text-xs font-semibold leading-5 text-white">
                   {waiting}
                   <span className="sr-only"> waiting on you</span>
                 </span>
@@ -123,15 +123,15 @@ export function OffersView() {
                       type="button"
                       onClick={() => select(offer.id)}
                       aria-current={current ? "true" : undefined}
-                      className={`flex w-full items-center gap-3 rounded-lg border-2 p-3 text-left ${
-                        current ? "border-accent bg-white" : "border-transparent bg-white/60 hover:bg-white"
+                      className={`flex w-full items-center gap-3 rounded-2xl border p-3 text-left ${
+                        current ? "border-accent bg-white shadow-card" : "border-transparent bg-white/60 hover:bg-white hover:shadow-card"
                       }`}
                     >
                       <span className="w-12 shrink-0">
                         <CardImage card={card} sizes="48px" />
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate font-display font-bold">{card.name}</span>
+                        <span className="block truncate font-semibold">{card.name}</span>
                         <span className="block truncate text-sm text-ink-soft">
                           {tab === "seller" ? `From ${other.name}` : `To ${other.name}`}, {termsText(terms, nameFor)},{" "}
                           {METHOD_LABELS[terms.exchange.method].toLowerCase()}

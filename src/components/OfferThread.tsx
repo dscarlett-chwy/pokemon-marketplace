@@ -64,7 +64,7 @@ export function OfferThread({ offer }: { offer: Offer }) {
             Asking {formatMoney(listing.askingPrice)}
             {myParty === "buyer" ? `, sold by ${other.name}` : `, offer from ${other.name}`}
           </p>
-          <Link href={`/listings/${listing.id}`} className="text-sm font-semibold text-accent underline underline-offset-4">
+          <Link href={`/listings/${listing.id}`} className="text-sm font-medium text-accent underline decoration-accent/30 underline-offset-4 hover:decoration-accent">
             View listing
           </Link>
         </div>
@@ -76,7 +76,7 @@ export function OfferThread({ offer }: { offer: Offer }) {
           return (
             <li
               key={i}
-              className={`rounded-lg border p-4 ${mine ? "border-accent/25 bg-accent/5 sm:ml-10" : "border-rule bg-white sm:mr-10"}`}
+              className={`rounded-2xl border p-4 sm:p-5 ${mine ? "border-accent/20 bg-accent-tint/60 sm:ml-10" : "border-rule bg-white sm:mr-10"}`}
             >
               <p className="text-sm text-ink-soft">
                 <span className="font-semibold text-ink">
@@ -147,7 +147,7 @@ export function OfferThread({ offer }: { offer: Offer }) {
               >
                 Yes, accept
               </button>
-              <button type="button" onClick={() => setMode("idle")} className="rounded-full px-4 py-3 font-semibold text-accent hover:bg-white">
+              <button type="button" onClick={() => setMode("idle")} className="rounded-full px-4 py-3 font-medium text-ink-soft hover:bg-ink/5 hover:text-ink">
                 Not yet
               </button>
             </div>
@@ -163,7 +163,7 @@ export function OfferThread({ offer }: { offer: Offer }) {
               >
                 Yes, decline
               </button>
-              <button type="button" onClick={() => setMode("idle")} className="rounded-full px-4 py-3 font-semibold text-accent hover:bg-white">
+              <button type="button" onClick={() => setMode("idle")} className="rounded-full px-4 py-3 font-medium text-ink-soft hover:bg-ink/5 hover:text-ink">
                 Not yet
               </button>
             </div>
@@ -192,7 +192,7 @@ export function OfferThread({ offer }: { offer: Offer }) {
               <button
                 type="button"
                 onClick={() => setMode("confirm-decline")}
-                className="rounded-full border-2 border-decline px-5 py-2.5 font-bold text-decline hover:bg-decline hover:text-white"
+                className="rounded-full border border-decline/50 px-5 py-2.5 font-bold text-decline hover:bg-decline hover:text-white"
               >
                 Decline
               </button>

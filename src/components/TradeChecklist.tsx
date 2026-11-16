@@ -217,7 +217,7 @@ export function TradeChecklist({
                                 <button
                                   type="button"
                                   onClick={() => setConfirming(null)}
-                                  className="rounded-full px-3 py-2 font-semibold text-accent hover:bg-white"
+                                  className="rounded-full px-3 py-2 font-medium text-ink-soft hover:bg-ink/5 hover:text-ink"
                                 >
                                   Not yet
                                 </button>
@@ -266,7 +266,7 @@ export function TradeChecklist({
               <button
                 type="button"
                 onClick={() => setConfirming(null)}
-                className="rounded-full px-4 py-3 font-semibold text-accent hover:bg-white"
+                className="rounded-full px-4 py-3 font-medium text-ink-soft hover:bg-ink/5 hover:text-ink"
               >
                 Keep trade
               </button>
@@ -277,7 +277,7 @@ export function TradeChecklist({
             <button
               type="button"
               onClick={() => setConfirming("cancel")}
-              className="rounded-full border-2 border-decline px-4 py-2 font-semibold text-decline hover:bg-decline hover:text-white"
+              className="rounded-full border border-decline/50 px-4 py-2 font-semibold text-decline hover:bg-decline hover:text-white"
             >
               Cancel trade
             </button>

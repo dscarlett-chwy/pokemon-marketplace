@@ -67,7 +67,7 @@ function CardPicker({ ownerId, picked, onToggle }: { ownerId: string; picked: st
             return (
               <li key={item.id}>
                 <label
-                  className={`block cursor-pointer rounded-xl border-2 p-1.5 has-focus-visible:outline-2 has-focus-visible:outline-accent ${
+                  className={`block cursor-pointer rounded-2xl border-2 p-1.5 has-focus-visible:outline-2 has-focus-visible:outline-accent ${
                     on ? "border-accent bg-accent/10" : "border-transparent hover:border-rule"
                   }`}
                 >
@@ -181,7 +181,7 @@ export function OfferForm({
               <button
                 type="button"
                 onClick={() => setSellerOpen(false)}
-                className="text-sm font-semibold text-accent underline underline-offset-4"
+                className="text-sm font-medium text-accent underline decoration-accent/30 underline-offset-4 hover:decoration-accent"
               >
                 Remove {names.seller === "You" ? "your" : `${names.seller}'s`} extras
               </button>
@@ -203,8 +203,8 @@ export function OfferForm({
           {listing.exchangeMethods.map((m) => (
             <label
               key={m}
-              className={`cursor-pointer rounded-xl border-2 px-3 py-2 has-focus-visible:outline-2 has-focus-visible:outline-accent ${
-                method === m ? "border-accent bg-accent/10 font-semibold" : "border-rule bg-white hover:border-accent/50"
+              className={`cursor-pointer rounded-full border px-4 py-2 text-sm has-focus-visible:outline-2 has-focus-visible:outline-accent ${
+                method === m ? "border-ink bg-ink font-medium text-paper" : "border-rule bg-white hover:border-ink/40"
               }`}
             >
               <input
@@ -318,7 +318,7 @@ export function OfferForm({
           {submitLabel}
         </button>
         {onCancel && (
-          <button type="button" onClick={onCancel} className="rounded-full px-4 py-3 font-semibold text-accent hover:bg-white">
+          <button type="button" onClick={onCancel} className="rounded-full px-4 py-3 font-medium text-ink-soft hover:bg-ink/5 hover:text-ink">
             Cancel
           </button>
         )}

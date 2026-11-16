@@ -42,7 +42,7 @@ function ResultRow({ card }: { card: Card }) {
             <select
               value={condition}
               onChange={(e) => setCondition(e.target.value as Condition)}
-              className="rounded-xl border border-rule bg-white px-2 py-1.5 text-sm"
+              className="pill-select rounded-full border border-rule bg-white py-1.5 pl-3 text-sm"
             >
               {CONDITIONS.map((c) => (
                 <option key={c}>{c}</option>
@@ -97,7 +97,7 @@ export function AddCardPanel({ onClose }: { onClose: () => void }) {
           </h2>
           <p className="text-ink-soft">Search the full Pokemon card catalog, then pick the condition of your copy.</p>
         </div>
-        <button type="button" onClick={onClose} className="rounded-full px-3 py-1.5 font-semibold text-accent hover:bg-white">
+        <button type="button" onClick={onClose} className="rounded-full px-3 py-1.5 font-medium text-ink-soft hover:bg-ink/5 hover:text-ink">
           Done
         </button>
       </div>
@@ -109,7 +109,7 @@ export function AddCardPanel({ onClose }: { onClose: () => void }) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Card name, like Gengar"
-          className="w-full rounded-lg border-2 border-accent bg-white px-4 py-3 text-lg"
+          className="w-full rounded-full border border-rule bg-white px-5 py-3 text-lg hover:border-ink/30 focus-visible:border-accent focus-visible:outline-offset-0"
         />
       </label>
 

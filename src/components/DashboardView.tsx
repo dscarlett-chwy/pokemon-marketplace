@@ -59,13 +59,13 @@ function DealItem({ row }: { row: DealRow }) {
     <li>
       <Link
         href={`/offers?offer=${offer.id}`}
-        className="flex items-center gap-3 rounded-lg border-2 border-transparent bg-white/60 p-3 hover:border-accent/30 hover:bg-white"
+        className="flex items-center gap-3 rounded-2xl bg-white/60 p-3 hover:bg-white hover:shadow-card"
       >
         <span className="w-12 shrink-0">
           <CardImage card={card} sizes="48px" />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate font-display font-bold">{card.name}</span>
+          <span className="block truncate font-semibold">{card.name}</span>
           <span className="block text-sm text-ink-soft sm:truncate">{summary}</span>
           <span className="tabular block text-sm text-ink-soft sm:hidden">{when}</span>
         </span>
@@ -147,14 +147,14 @@ export function DashboardView() {
   return (
     <div className="space-y-10">
       <div>
-        <h1 className="font-display text-display font-extrabold tracking-tight">Dashboard</h1>
-        <p className="mt-1 text-lg text-ink-soft">{user.name}&apos;s sales and trades</p>
+        <h1 className="font-display text-display font-bold">Dashboard</h1>
+        <p className="mt-3 text-lg text-ink-soft">{user.name}&apos;s sales and trades</p>
       </div>
 
-      <dl className="rounded-3xl border border-rule bg-surface p-5 shadow-panel sm:p-7 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-4">
-        <div className="col-span-2 sm:col-span-4 sm:border-b sm:border-rule sm:pb-5">
-          <dt className="text-ink-soft">Cash from sales</dt>
-          <dd className="tabular font-display text-5xl font-extrabold tracking-tight text-accent sm:text-6xl">
+      <dl className="grid grid-cols-2 gap-x-6 gap-y-6 rounded-3xl border border-rule bg-surface p-6 shadow-panel sm:grid-cols-4 sm:p-8">
+        <div className="col-span-2 sm:col-span-4 sm:border-b sm:border-rule sm:pb-6">
+          <dt className="text-sm text-ink-soft">Cash from sales</dt>
+          <dd className="tabular font-display mt-1 text-5xl font-bold tracking-[-0.045em] text-ink sm:text-6xl">
             {formatMoney(stats.cashFromSales)}
           </dd>
         </div>
@@ -163,7 +163,7 @@ export function DashboardView() {
         <Stat label="Active listings" value={stats.activeListings} href="/inventory" />
         <div className={stats.waitingOnMe > 0 ? "-m-2 rounded-xl bg-accent-tint p-2" : undefined}>
           <dt className={stats.waitingOnMe > 0 ? "text-ink" : "text-ink-soft"}>Waiting on you</dt>
-          <dd className="tabular font-display text-3xl font-bold">
+          <dd className="tabular mt-0.5 text-3xl font-bold tracking-[-0.03em]">
             {stats.waitingOnMe > 0 ? (
               <Link href="/offers" className="underline underline-offset-4">
                 {stats.waitingOnMe}
@@ -180,7 +180,7 @@ export function DashboardView() {
           <h2 id="deals-heading" className="font-display text-title font-bold">
             Offers and trades
           </h2>
-          <div role="tablist" aria-label="Whose offers" className="flex gap-2 border-b border-rule">
+          <div role="tablist" aria-label="Whose offers" className="inline-flex gap-1 rounded-full bg-ink/5 p-1">
             {SIDES.map(({ party, label }) => (
               <button
                 key={party}
@@ -188,8 +188,8 @@ export function DashboardView() {
                 role="tab"
                 aria-selected={side === party}
                 onClick={() => setSide(party)}
-                className={`-mb-px border-b-4 px-3 py-1.5 font-semibold ${
-                  side === party ? "border-accent text-ink" : "border-transparent text-ink-soft hover:text-ink"
+                className={`rounded-full px-4 py-1.5 text-[0.9375rem] font-medium ${
+                  side === party ? "bg-white text-ink shadow-card" : "text-ink-soft hover:text-ink"
                 }`}
               >
                 {label}
@@ -208,8 +208,8 @@ export function DashboardView() {
                 type="button"
                 aria-pressed={selected}
                 onClick={() => setBucket(b)}
-                className={`tabular rounded-full border-2 px-3 py-1 text-sm font-semibold ${
-                  selected ? "border-accent bg-accent text-white" : "border-rule bg-white/60 text-ink hover:border-accent/40"
+                className={`tabular rounded-full border px-3.5 py-1.5 text-sm font-medium ${
+                  selected ? "border-ink bg-ink text-paper" : "border-rule bg-white text-ink hover:border-ink/40"
                 }`}
               >
                 {label} {count}
@@ -219,7 +219,7 @@ export function DashboardView() {
         </div>
 
         {shown.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-rule px-4 py-8 text-center text-lg">{EMPTY[side][bucket]}</p>
+          <p className="rounded-3xl border border-dashed border-rule px-6 py-12 text-center text-ink-soft">{EMPTY[side][bucket]}</p>
         ) : (
           <ul className="space-y-2">
             {shown.map((row) => (
@@ -236,7 +236,7 @@ export function DashboardView() {
         {stats.sales.length === 0 ? (
           <p className="py-4 text-lg">
             No sales yet. When a trade on one of your cards is completed, it&apos;s recorded here.{" "}
-            <Link href="/inventory" className="font-semibold text-accent underline underline-offset-4">
+            <Link href="/inventory" className="font-medium text-accent underline decoration-accent/30 underline-offset-4 hover:decoration-accent">
               List a card
             </Link>
           </p>
@@ -255,8 +255,8 @@ export function DashboardView() {
 function Stat({ label, value, href }: { label: string; value: number; href?: string }) {
   return (
     <div>
-      <dt className="text-ink-soft">{label}</dt>
-      <dd className="tabular font-display text-3xl font-bold">
+      <dt className="text-sm text-ink-soft">{label}</dt>
+      <dd className="tabular mt-0.5 text-3xl font-bold tracking-[-0.03em]">
         {href ? (
           <Link href={href} className="hover:underline">
             {value}

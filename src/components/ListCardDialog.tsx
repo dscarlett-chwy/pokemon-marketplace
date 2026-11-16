@@ -57,9 +57,9 @@ export function ListCardDialog({ item, card, onClose }: { item: OwnedCard; card:
       ref={ref}
       onClose={onClose}
       aria-labelledby="list-heading"
-      className="m-auto w-[min(32rem,calc(100%-2rem))] rounded-lg bg-surface p-0 text-ink backdrop:bg-ink/60"
+      className="m-auto w-[min(32rem,calc(100%-2rem))] rounded-3xl bg-surface p-0 text-ink shadow-lift backdrop:bg-ink/50 backdrop:backdrop-blur-sm"
     >
-      <form onSubmit={submit} className="space-y-4 p-5" noValidate>
+      <form onSubmit={submit} className="space-y-5 p-6 sm:p-7" noValidate>
         <div className="flex gap-4">
           <div className="w-24 shrink-0">
             <CardImage card={card} sizes="96px" />
@@ -170,7 +170,7 @@ export function ListCardDialog({ item, card, onClose }: { item: OwnedCard; card:
           >
             List for sale
           </button>
-          <button type="button" onClick={() => ref.current?.close()} className="rounded-full px-4 py-3 font-semibold text-accent hover:bg-white">
+          <button type="button" onClick={() => ref.current?.close()} className="rounded-full px-4 py-3 font-medium text-ink-soft hover:bg-ink/5 hover:text-ink">
             Cancel
           </button>
         </div>
