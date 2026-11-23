@@ -6,6 +6,7 @@ const API = "https://api.pokemontcg.io/v2";
 const FIELDS = "id,name,supertype,types,number,rarity,set,images,tcgplayer";
 const PAGE_SIZE = 24;
 const ATTEMPTS = 6;
+const TIMEOUT_MS = 8000;
 
 type ApiCard = {
   id: string;
@@ -40,7 +41,9 @@ function toCard(c: ApiCard): Card {
 async function fetchJson<T>(path: string): Promise<T> {
   const headers: HeadersInit = {};
   if (process.env.POKEMONTCG_API_KEY) headers["X-Api-Key"] = process.env.POKEMONTCG_API_KEY;
-  const res = await fetch(`${API}${path}`, { headers });
+  // The signal also opts out of fetch deduplication, which otherwise hands every
+  // retry in a request the same failed response.
+  const res = await fetch(`${API}${path}`, { headers, signal: AbortSignal.timeout(TIMEOUT_MS) });
   if (!res.ok) throw new Error(String(res.status));
   return (await res.json()) as T;
 }
