@@ -68,25 +68,29 @@ async function loadMarket(): Promise<MarketData> {
 }
 
 /**
- * The part of the market one visitor may see: their own cards and offers, the cards they could ask
- * a trading partner to add, and every listing. Closed listings stay public so their links still
- * work, but who bought the card doesn't. Rules still run against the full market.
+ * The part of the market one visitor may see: their own cards and offers, every listing, and for
+ * signed-in collectors, every card that's open to trade. Closed listings stay public so their links
+ * still work, but who got the card doesn't. Rules still run against the full market.
  */
 export async function marketFor(viewer: string | null): Promise<MarketData> {
   const full = await loadMarket();
-  const { listings } = full;
   const offers = Object.fromEntries(
     Object.entries(full.offers).filter(([, o]) => viewer !== null && (o.buyerId === viewer || o.sellerId === viewer)),
   );
 
-  // Collectors whose tradeable cards the viewer may ask for in an offer or counter.
-  const partners = new Set<string>();
-  if (viewer) {
-    for (const l of Object.values(full.listings)) if (l.status === "active" && l.openToTrades) partners.add(l.sellerId);
-    for (const o of Object.values(offers)) {
-      if (o.status === "pending" && full.listings[o.listingId]?.openToTrades) partners.add(o.buyerId).add(o.sellerId);
+  // A card that changed hands would reveal its new owner through its old listing, so everyone else
+  // sees that listing with a stand-in copy of the card instead.
+  const listings: MarketData["listings"] = {};
+  const standIns: MarketData["items"] = {};
+  for (const l of Object.values(full.listings)) {
+    const item = full.items[l.itemId];
+    if (!item || item.ownerId === l.sellerId || item.ownerId === viewer) {
+      listings[l.id] = l;
+      continue;
     }
-    partners.delete(viewer);
+    const id = `x-${l.id}`;
+    listings[l.id] = { ...l, itemId: id };
+    standIns[id] = { ...item, id, ownerId: "" };
   }
 
   // Each visible item mapped to whether its owner may be shown.
@@ -95,10 +99,9 @@ export async function marketFor(viewer: string | null): Promise<MarketData> {
     if (full.items[id]) shown.set(id, owner || shown.get(id) === true);
   };
   for (const item of Object.values(full.items)) if (item.ownerId === viewer) show(item.id, true);
-  // A card someone bought would reveal the buyer through its old listing, so it stays out of their binder.
-  const changedHands = new Set(Object.values(listings).flatMap((l) => (full.items[l.itemId]?.ownerId === l.sellerId ? [] : [l.itemId])));
-  for (const partner of partners) {
-    for (const item of rules.tradeableItems(full, partner)) if (!changedHands.has(item.id)) show(item.id, true);
+  if (viewer) {
+    const owners = new Set(Object.values(full.items).map((i) => i.ownerId));
+    for (const owner of owners) for (const item of rules.tradeableItems(full, owner)) show(item.id, true);
   }
   for (const l of Object.values(listings)) {
     show(l.itemId, full.items[l.itemId]?.ownerId === l.sellerId && (l.status === "active" || l.status === "trading"));
@@ -109,7 +112,7 @@ export async function marketFor(viewer: string | null): Promise<MarketData> {
     for (const id of ids) if (id) show(id, parties.includes(full.items[id]?.ownerId));
   }
 
-  const items: MarketData["items"] = {};
+  const items: MarketData["items"] = { ...standIns };
   for (const [id, owner] of shown) items[id] = owner ? full.items[id] : { ...full.items[id], ownerId: "" };
 
   const cards: MarketData["cards"] = {};
