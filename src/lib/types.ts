@@ -1,6 +1,7 @@
 import type { Card } from "./card";
 
-export type User = { id: string; name: string };
+/** `handle` is the public name in profile links. It's empty if an older version of the app added the collector, until the next server start fills it in. */
+export type User = { id: string; name: string; handle: string };
 
 export const CONDITIONS = [
   "Mint",

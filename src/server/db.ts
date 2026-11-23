@@ -1,6 +1,7 @@
 import "server-only";
 import postgres, { type Sql } from "postgres";
 import type { Card } from "@/lib/card";
+import { freeHandle, handleBase } from "@/lib/handle";
 import type {
   Condition,
   ExchangeMethod,
@@ -61,6 +62,12 @@ const SCHEMA = `
   ALTER TABLE items ENABLE ROW LEVEL SECURITY;
   ALTER TABLE listings ENABLE ROW LEVEL SECURITY;
   ALTER TABLE offers ENABLE ROW LEVEL SECURITY;
+  ALTER TABLE users ADD COLUMN IF NOT EXISTS handle TEXT;
+`;
+
+/** Runs after SCHEMA and the handle backfill, since existing users need unique handles first. */
+const INDEXES = `
+  CREATE UNIQUE INDEX IF NOT EXISTS users_handle_key ON users (handle);
 `;
 
 type Table = keyof MarketData;
@@ -69,7 +76,7 @@ const TABLES: Table[] = ["users", "cards", "items", "listings", "offers"];
 
 /** Columns each upsert may change. Ownership of listings and offers never moves. */
 const UPDATABLE: Record<Table, string[]> = {
-  users: ["name"],
+  users: ["name", "handle"],
   cards: ["data"],
   items: ["owner_id", "card_id", "condition"],
   listings: ["asking_price", "open_to_trades", "exchange_methods", "area", "note", "status"],
@@ -81,7 +88,7 @@ type Params = Record<string, unknown>;
 type Db = postgres.ISql;
 
 const toParams = {
-  users: (u: MarketData["users"][string]): Params => ({ id: u.id, name: u.name }),
+  users: (u: MarketData["users"][string]): Params => ({ id: u.id, name: u.name, handle: u.handle }),
   cards: (c: Card): Params => ({ id: c.id, data: c }),
   items: (i: MarketData["items"][string]): Params => ({
     id: i.id,
@@ -142,8 +149,19 @@ async function setUp(sql: Sql) {
   await sql.begin(async (tx) => {
     await tx`SELECT pg_advisory_xact_lock(${WRITE_LOCK})`;
     await tx.unsafe(SCHEMA);
+    const missing = await tx<{ id: string; name: string }[]>`SELECT id, name FROM users WHERE handle IS NULL ORDER BY id`;
+    for (const u of missing) await tx`UPDATE users SET handle = ${await newHandle(tx, u.name)} WHERE id = ${u.id}`;
+    await tx.unsafe(INDEXES);
   });
   return sql;
+}
+
+async function newHandle(sql: Db, seed: string) {
+  const base = handleBase(seed);
+  const rows = await sql<{ handle: string }[]>`
+    SELECT handle FROM users WHERE handle = ${base} OR handle LIKE ${`${base}-%`}
+  `;
+  return freeHandle(base, new Set(rows.map((r) => r.handle)));
 }
 
 export function getDb(): Promise<Sql> {
@@ -178,7 +196,7 @@ export async function readMarket(sql: Db): Promise<MarketData> {
   ]);
   const market = emptyMarket();
   for (const r of users) {
-    market.users[r.id as string] = { id: r.id as string, name: r.name as string };
+    market.users[r.id as string] = { id: r.id as string, name: r.name as string, handle: (r.handle as string | null) ?? "" };
   }
   for (const r of cards) {
     market.cards[r.id as string] = r.data as Card;
@@ -243,7 +261,11 @@ export async function isUser(userId: string) {
   return rows.length > 0;
 }
 
-export async function addUser(userId: string, name: string) {
-  const sql = await getDb();
-  await sql`INSERT INTO users (id, name) VALUES (${userId}, ${name}) ON CONFLICT (id) DO NOTHING`;
+/** `handleSeed` is what the new handle is made from, like a username or display name. */
+export async function addUser(userId: string, name: string, handleSeed: string) {
+  await transaction(async (tx) => {
+    if ((await tx`SELECT 1 FROM users WHERE id = ${userId}`).length > 0) return;
+    const handle = await newHandle(tx, handleSeed);
+    await tx`INSERT INTO users (id, name, handle) VALUES (${userId}, ${name}, ${handle})`;
+  });
 }

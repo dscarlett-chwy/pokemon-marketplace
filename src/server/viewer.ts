@@ -16,6 +16,10 @@ const displayName = (user: ClerkUser | null) =>
 export async function getViewer(): Promise<string | null> {
   const { userId } = await auth();
   if (!userId) return null;
-  if (!(await isUser(userId))) await addUser(userId, displayName(await currentUser()));
+  if (!(await isUser(userId))) {
+    const user = await currentUser();
+    const name = displayName(user);
+    await addUser(userId, name, user?.username ?? name);
+  }
   return userId;
 }
