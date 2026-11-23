@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { CardGridSkeleton } from "./Skeletons";
 import { useDeferredValue, useMemo, useState, ViewTransition } from "react";
 import { useListingRows } from "@/lib/listing-rows";
@@ -72,7 +73,18 @@ export function MarketplaceView() {
             )}
           </div>
 
-          {results.length === 0 ? (
+          {active.length === 0 ? (
+            <div className="rounded-3xl border border-dashed border-rule px-6 py-16 text-center">
+              <p className="text-lg font-semibold">Nothing for sale yet</p>
+              <p className="mx-auto mt-1 max-w-sm text-ink-soft">
+                Be the first:{" "}
+                <Link href="/inventory" className="font-medium text-accent underline decoration-accent/30 underline-offset-4 hover:decoration-accent">
+                  add a card
+                </Link>{" "}
+                and list it for sale or trade.
+              </p>
+            </div>
+          ) : results.length === 0 ? (
             <div className="rounded-3xl border border-dashed border-rule px-6 py-16 text-center">
               <p className="text-lg font-semibold">No cards match</p>
               <p className="mx-auto mt-1 max-w-sm text-ink-soft">Try a different name, or clear the filters to see every card for sale.</p>
