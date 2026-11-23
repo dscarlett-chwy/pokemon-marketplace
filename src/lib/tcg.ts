@@ -5,7 +5,7 @@ import type { Card, CardSearchResult } from "./card";
 const API = "https://api.pokemontcg.io/v2";
 const FIELDS = "id,name,supertype,types,number,rarity,set,images,tcgplayer";
 const PAGE_SIZE = 24;
-const ATTEMPTS = 6;
+const ATTEMPTS = 8;
 const TIMEOUT_MS = 8000;
 
 type ApiCard = {
