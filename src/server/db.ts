@@ -1,7 +1,6 @@
 import "server-only";
 import postgres, { type Sql } from "postgres";
 import type { Card } from "@/lib/card";
-import { seedMarket } from "@/lib/seed";
 import type {
   Condition,
   ExchangeMethod,
@@ -143,8 +142,6 @@ async function setUp(sql: Sql) {
   await sql.begin(async (tx) => {
     await tx`SELECT pg_advisory_xact_lock(${WRITE_LOCK})`;
     await tx.unsafe(SCHEMA);
-    const [{ count }] = await tx<{ count: number }[]>`SELECT COUNT(*)::int AS count FROM users`;
-    if (count === 0) await writeChanges(tx, emptyMarket(), seedMarket());
   });
   return sql;
 }
@@ -249,15 +246,4 @@ export async function isUser(userId: string) {
 export async function addUser(userId: string, name: string) {
   const sql = await getDb();
   await sql`INSERT INTO users (id, name) VALUES (${userId}, ${name}) ON CONFLICT (id) DO NOTHING`;
-}
-
-/** Puts the demo data back. Accounts survive; their cards, listings and offers don't. */
-export async function resetMarket() {
-  await transaction(async (tx) => {
-    const users = await tx<{ id: string; name: string }[]>`SELECT id, name FROM users`;
-    for (const table of [...TABLES].reverse()) await tx`DELETE FROM ${tx(table)}`;
-    const seed = seedMarket();
-    for (const u of users) seed.users[u.id] ??= { id: u.id, name: u.name };
-    await writeChanges(tx, emptyMarket(), seed);
-  });
 }

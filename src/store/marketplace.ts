@@ -4,7 +4,6 @@ import { create } from "zustand";
 import * as server from "@/app/actions";
 import type { Card } from "@/lib/card";
 import * as rules from "@/lib/marketplace-rules";
-import { seedMarket, USERS } from "@/lib/seed";
 import type { Condition, MarketData, OfferTerms, Result, TradeStep } from "@/lib/types";
 import { useNotice } from "./notice";
 
@@ -33,7 +32,6 @@ type Actions = {
   declineOffer: (offerId: string) => Result;
   completeStep: (offerId: string, step: TradeStep) => Result;
   cancelTrade: (offerId: string) => Result;
-  resetDemo: () => void;
 };
 
 export type MarketplaceState = Data & Actions;
@@ -41,7 +39,7 @@ export type MarketplaceState = Data & Actions;
 const empty: Data = {
   currentUserId: null,
   loaded: false,
-  users: Object.fromEntries(USERS.map((u) => [u.id, u])),
+  users: {},
   cards: {},
   items: {},
   listings: {},
@@ -166,10 +164,5 @@ export const useMarketplace = create<MarketplaceState>()((set, get) => {
         (m, me) => rules.cancelTrade(m, me, offerId),
         () => server.cancelTrade(offerId),
       ),
-
-    resetDemo: () => {
-      set({ ...seedMarket(), users: { ...get().users, ...seedMarket().users } });
-      save(server.resetDemo);
-    },
   };
 });

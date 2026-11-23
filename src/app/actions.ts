@@ -48,13 +48,3 @@ export async function completeStep(offerId: unknown, step: unknown) {
 export async function cancelTrade(offerId: unknown) {
   return asViewer((me) => market.cancelTrade(me, offerId));
 }
-
-export async function resetDemo() {
-  if (process.env.NODE_ENV === "production") {
-    return synced({ ok: false, error: "Resetting the demo is only available in development." }, await getViewer());
-  }
-  return asViewer(async (me) => {
-    await market.resetDemo();
-    return { ok: true, id: me };
-  });
-}

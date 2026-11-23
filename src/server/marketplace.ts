@@ -16,7 +16,7 @@ import {
   type Side,
   type TradeStep,
 } from "@/lib/types";
-import { getDb, readMarket, resetMarket, transaction, writeChanges } from "./db";
+import { getDb, readMarket, transaction, writeChanges } from "./db";
 
 export { addUser, isUser } from "./db";
 
@@ -205,9 +205,4 @@ export async function completeStep(me: string, offerId: unknown, step: unknown):
 export async function cancelTrade(me: string, offerId: unknown): Promise<Result> {
   if (!isRef(offerId)) return INVALID;
   return apply(me, (m) => rules.cancelTrade(m, me, offerId));
-}
-
-/** Accounts survive a reset; their cards, listings and offers don't. */
-export function resetDemo() {
-  return resetMarket();
 }
