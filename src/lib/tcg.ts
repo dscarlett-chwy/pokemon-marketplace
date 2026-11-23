@@ -51,16 +51,19 @@ async function fetchJson<T>(path: string): Promise<T> {
 // Errors thrown inside "use cache" lose their class, so retries and error typing
 // happen out here; only successful responses get cached.
 async function withRetry<T>(load: () => Promise<T>): Promise<T> {
+  const failures: string[] = [];
   for (let attempt = 1; attempt <= ATTEMPTS; attempt++) {
     try {
       return await load();
     } catch (error) {
+      failures.push((error as Error).message);
       const status = Number((error as Error).message);
       if (status === 404) throw new TcgUnavailableError("Card not found");
       if (status >= 400 && status < 500 && status !== 429) throw new TcgUnavailableError(`Card search failed (${status})`);
     }
     if (attempt < ATTEMPTS) await new Promise((r) => setTimeout(r, 250 * attempt));
   }
+  console.error(`Pokemon TCG API failed ${ATTEMPTS} times: ${failures.join(", ")}`);
   throw new TcgUnavailableError("The Pokemon card catalog isn't responding right now");
 }
 
