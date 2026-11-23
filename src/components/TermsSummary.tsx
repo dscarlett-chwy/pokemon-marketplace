@@ -3,8 +3,8 @@
 import type { Card } from "@/lib/card";
 import { exchangeLabel } from "@/lib/exchange";
 import { formatMoney } from "@/lib/format";
-import { payer } from "@/lib/marketplace-rules";
-import type { Listing, MarketData, OfferTerms, Party, Side } from "@/lib/types";
+import { payer, type Deal } from "@/lib/marketplace-rules";
+import type { MarketData, OfferTerms, Party, Side } from "@/lib/types";
 import { useMarketplace } from "@/store/marketplace";
 import { CardImage } from "./CardImage";
 
@@ -24,8 +24,14 @@ const hasExtras = (side: Side) => side.cash > 0 || side.itemIds.length > 0;
 export const sellerGivesText = (cardName: string, seller: Side) =>
   hasExtras(seller) ? `${cardName} + ${sideText(seller)}` : cardName;
 
-/** What the buyer gives, plus anything the seller adds, like "$180, Misty adds 1 card". */
-export function termsText(terms: OfferTerms, nameFor: NameFor) {
+const givesText = (name: string, side: Side) => `${name === "You" ? "you give" : `${name} gives`} ${sideText(side)}`;
+
+/**
+ * What the buyer gives, plus anything the seller adds, like "$180, Misty adds 1 card". Without a
+ * listed card both sides are spelled out, like "you give 1 card, Misty gives $20".
+ */
+export function termsText(terms: OfferTerms, nameFor: NameFor, direct = false) {
+  if (direct) return `${givesText(nameFor("buyer"), terms.buyer)}, ${givesText(nameFor("seller"), terms.seller)}`;
   if (!hasExtras(terms.seller)) return sideText(terms.buyer);
   const who = nameFor("seller");
   return `${sideText(terms.buyer)}, ${who === "You" ? "you add" : `${who} adds`} ${sideText(terms.seller)}`;
@@ -62,7 +68,8 @@ function CardList({ entries }: { entries: { id: string; card: Card; condition: s
   );
 }
 
-export function TermsSummary({ terms, listing, nameFor }: { terms: OfferTerms; listing: Listing; nameFor: NameFor }) {
+export function TermsSummary({ terms, deal, nameFor }: { terms: OfferTerms; deal: Deal; nameFor: NameFor }) {
+  const { listing } = deal;
   const items = useMarketplace((s) => s.items);
   const cards = useMarketplace((s) => s.cards);
   const { exchange } = terms;
@@ -77,9 +84,11 @@ export function TermsSummary({ terms, listing, nameFor }: { terms: OfferTerms; l
 
   const halves = (["buyer", "seller"] as const).map((party) => {
     const side = terms[party];
-    const ids = party === "seller" ? [listing.itemId, ...side.itemIds] : side.itemIds;
+    const ids = party === "seller" && listing ? [listing.itemId, ...side.itemIds] : side.itemIds;
     const summary =
-      party === "seller" ? sellerGivesText(cards[items[listing.itemId]?.cardId]?.name ?? "The card", side) : sideText(side);
+      party === "seller" && listing
+        ? sellerGivesText(cards[items[listing.itemId]?.cardId]?.name ?? "The card", side)
+        : sideText(side);
     return { party, ids, summary, value: marketValue(side.cash, ids, { items, cards }) };
   });
 
@@ -96,7 +105,7 @@ export function TermsSummary({ terms, listing, nameFor }: { terms: OfferTerms; l
         ))}
       </div>
       <div>
-        <p className="font-semibold">{exchangeLabel(exchange, listing.area, nameFor)}</p>
+        <p className="font-semibold">{exchangeLabel(exchange, deal.area, nameFor)}</p>
         {exchange.method !== "ship" && exchange.meetup && <p className="text-ink-soft">Meetup: {exchange.meetup}</p>}
         {payment && <p className="tabular font-semibold">{payment}</p>}
       </div>

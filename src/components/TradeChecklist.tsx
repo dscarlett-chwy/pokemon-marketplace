@@ -4,8 +4,8 @@ import { useState } from "react";
 import type { Card } from "@/lib/card";
 import { exchangeLabel } from "@/lib/exchange";
 import { formatMoney } from "@/lib/format";
-import { payer, type StepState } from "@/lib/marketplace-rules";
-import type { Listing, Offer, Party, Trade } from "@/lib/types";
+import { payer, type Deal, type StepState } from "@/lib/marketplace-rules";
+import type { Offer, Party, Trade } from "@/lib/types";
 import { latestTerms, partyOf, tradeSteps, useMarketplace, useMe } from "@/store/marketplace";
 import { useNotice } from "@/store/notice";
 
@@ -33,15 +33,17 @@ function Check({ state }: { state: "done" | "ready" | "waiting" }) {
 
 export function TradeChecklist({
   offer,
-  listing,
+  deal,
   card,
   nameFor,
 }: {
   offer: Offer & { trade: Trade };
-  listing: Listing;
-  card: Card;
+  deal: Deal;
+  /** The listed card, or null for a direct offer. */
+  card: Card | null;
   nameFor: (party: Party) => string;
 }) {
+  const { listing } = deal;
   const me = useMe();
   const items = useMarketplace((s) => s.items);
   const cards = useMarketplace((s) => s.cards);
@@ -64,7 +66,7 @@ export function TradeChecklist({
   const lower = (p: Party) => (nameFor(p) === "You" ? "you" : nameFor(p));
 
   const sends = (p: Party) => {
-    const ids = p === "seller" ? [listing.itemId, ...terms.seller.itemIds] : terms.buyer.itemIds;
+    const ids = p === "seller" ? [...(listing ? [listing.itemId] : []), ...terms.seller.itemIds] : terms.buyer.itemIds;
     const things = ids.map((id) => cards[items[id]?.cardId]?.name ?? "a card");
     if (money?.party === p && terms.payment === "in_person") things.unshift(`${formatMoney(money.cash)} cash`);
     return list.format(things);
@@ -94,8 +96,11 @@ export function TradeChecklist({
   };
 
   const finishing = (s: StepState) => steps.filter((x) => !x.done).length === 1 && !s.done;
-  const completeText =
-    myParty === "buyer" ? `Trade complete. ${card.name} is in your cards` : `Trade complete. You traded ${card.name}`;
+  const completeText = !card
+    ? "Trade complete. The cards changed owners"
+    : myParty === "buyer"
+      ? `Trade complete. ${card.name} is in your cards`
+      : `Trade complete. You traded ${card.name}`;
 
   const act = (s: StepState) => {
     const result = completeStep(offer.id, s.step);
@@ -114,7 +119,11 @@ export function TradeChecklist({
       <p className="font-display text-xl font-bold text-accept">
         Trade complete.{" "}
         <span className="font-sans text-base font-normal text-ink">
-          {myParty === "buyer" ? `${card.name} is now in your cards.` : `${card.name} went to ${name(them)}.`}
+          {!card
+            ? "The cards changed owners."
+            : myParty === "buyer"
+              ? `${card.name} is now in your cards.`
+              : `${card.name} went to ${name(them)}.`}
         </span>
       </p>
     ) : trade.status === "cancelled" ? (
@@ -140,7 +149,7 @@ export function TradeChecklist({
       <div>
         {headline}
         <p className="mt-1">
-          {exchangeLabel(terms.exchange, listing.area, nameFor)}
+          {exchangeLabel(terms.exchange, deal.area, nameFor)}
           {meetup && `. Meetup: ${meetup}`}
         </p>
       </div>
@@ -252,8 +261,8 @@ export function TradeChecklist({
           <div className="space-y-3 border-t border-rule pt-4">
             <p className="text-lg">
               Cancel this trade?{online && paid ? ` ${formatMoney(money.cash)} goes back to ${lower(money.party)}.` : ""} No cards
-              change owners and {card.name} goes back on sale. If anything was already sent, sort out returning it with{" "}
-              {name(them)}.
+              change owners{card ? ` and ${card.name} goes back on sale` : ""}. If anything was already sent, sort out returning
+              it with {name(them)}.
             </p>
             <div className="flex flex-wrap gap-3">
               <button

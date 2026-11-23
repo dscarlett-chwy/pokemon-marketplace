@@ -7,6 +7,7 @@ import { ViewTransition } from "react";
 import { methodsText } from "@/lib/exchange";
 import { formatMoney, formatWhen } from "@/lib/format";
 import { useListingRows } from "@/lib/listing-rows";
+import { listingDeal } from "@/lib/marketplace-rules";
 import { useHydrated } from "@/store/hydration";
 import { useMarketplace } from "@/store/marketplace";
 import { useNotice } from "@/store/notice";
@@ -202,7 +203,7 @@ export function ListingView() {
                   Make an offer
                 </h2>
                 <OfferForm
-                  listing={listing}
+                  deal={listingDeal(listing)}
                   buyerId={me}
                   initial={{ buyer: { cash: listing.askingPrice, itemIds: [] } }}
                   submitLabel="Send offer"

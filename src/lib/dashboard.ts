@@ -1,7 +1,7 @@
 import type { Card } from "./card";
 import { formatMoney } from "./format";
-import { latestTerms, needsAction, partyOf, tradeSteps } from "./marketplace-rules";
-import type { Listing, MarketData, Offer, OfferTerms, OwnedCard, Party, Side, User } from "./types";
+import { dealOf, latestTerms, leadItemId, needsAction, partyOf, tradeSteps } from "./marketplace-rules";
+import type { Listing, MarketData, Offer, OfferTerms, Party, Side, User } from "./types";
 
 export type Bucket = "pending" | "in-progress" | "completed" | "declined" | "closed";
 
@@ -23,10 +23,16 @@ export function bucketOf(offer: Offer): Bucket {
   return offer.status;
 }
 
+/** The card that stands for an offer in lists: the listed card, or for a direct offer the first card in it. */
+export function leadCard(m: Pick<MarketData, "listings" | "items" | "cards">, offer: Offer): Card | undefined {
+  const item = m.items[leadItemId(dealOf(m.listings, offer), latestTerms(offer)) ?? ""];
+  return item && m.cards[item.cardId];
+}
+
 export type DealRow = {
   offer: Offer;
-  listing: Listing;
-  item: OwnedCard;
+  /** Null for a direct offer. */
+  listing: Listing | null;
   card: Card;
   other: User;
   party: Party;
@@ -40,16 +46,13 @@ export function dealRows(m: MarketData, me: string): DealRow[] {
   return Object.values(m.offers)
     .flatMap((offer) => {
       const party = partyOf(offer, me);
-      const listing = m.listings[offer.listingId];
-      const item = listing && m.items[listing.itemId];
-      const card = item && m.cards[item.cardId];
+      const card = leadCard(m, offer);
       if (!party || !card) return [];
       const steps = tradeSteps(offer);
       return [
         {
           offer,
-          listing,
-          item,
+          listing: dealOf(m.listings, offer).listing,
           card,
           other: m.users[party === "seller" ? offer.buyerId : offer.sellerId],
           party,
@@ -77,7 +80,7 @@ export const netCash = (terms: OfferTerms) => terms.buyer.cash - terms.seller.ca
 
 export function dashboardStats(listings: Record<string, Listing>, me: string, rows: DealRow[]) {
   const sales = rows
-    .filter((r) => r.party === "seller" && r.bucket === "completed")
+    .filter((r) => r.listing && r.party === "seller" && r.bucket === "completed")
     .sort((a, b) => b.offer.updatedAt.localeCompare(a.offer.updatedAt));
   return {
     sales,

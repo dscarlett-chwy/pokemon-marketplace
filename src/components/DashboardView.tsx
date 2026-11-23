@@ -50,8 +50,11 @@ const STATUS_STYLE: Record<Bucket, string> = {
 function DealItem({ row }: { row: DealRow }) {
   const { offer, card, other, party, terms, steps } = row;
   const extra = sellerAdds(terms) ? sideText(terms.seller) : null;
-  const summary =
-    party === "seller"
+  const summary = !row.listing
+    ? party === "seller"
+      ? `Direct from ${other.name}, you get ${sideText(terms.buyer)} for ${sideText(terms.seller)}`
+      : `Direct to ${other.name}, you give ${sideText(terms.buyer)} for ${sideText(terms.seller)}`
+    : party === "seller"
       ? `From ${other.name}, ${sideText(terms.buyer)}${extra ? `, you add ${extra}` : ""}`
       : `To ${other.name}, you give ${sideText(terms.buyer)}${extra ? ` and get ${extra} extra` : ""}`;
   const when = row.bucket === "in-progress" ? `${steps.done} of ${steps.total} steps done` : formatWhen(offer.updatedAt);
@@ -65,7 +68,7 @@ function DealItem({ row }: { row: DealRow }) {
           <CardImage card={card} sizes="48px" />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate font-semibold">{card.name}</span>
+          <span className="block truncate font-semibold">{row.listing ? card.name : `Trade with ${other.name}`}</span>
           <span className="block text-sm text-ink-soft sm:truncate">{summary}</span>
           <span className="tabular block text-sm text-ink-soft sm:hidden">{when}</span>
         </span>

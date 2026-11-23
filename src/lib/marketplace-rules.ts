@@ -73,6 +73,10 @@ export function dealOf(listings: Record<string, Listing>, offer: Pick<Offer, "li
   return { listing: null, sellerId: offer.sellerId, openToTrades: true, exchangeMethods: [...EXCHANGE_METHODS], area: "" };
 }
 
+/** The card that stands for an offer in lists: the listed card, or else the first card either side adds. */
+export const leadItemId = (deal: Deal, terms: OfferTerms): string | undefined =>
+  deal.listing?.itemId ?? terms.seller.itemIds[0] ?? terms.buyer.itemIds[0];
+
 /** Every card that changes owners if the deal goes through. */
 export const tradedItemIds = (deal: Deal, terms: OfferTerms) => [
   ...(deal.listing ? [deal.listing.itemId] : []),

@@ -9,7 +9,9 @@ import { useNotice } from "./notice";
 
 export {
   activeListingForItem,
+  dealOf,
   latestTerms,
+  leadItemId,
   lockedItems,
   needsAction,
   offeredItemIds,
@@ -17,6 +19,7 @@ export {
   tradeableItems,
   tradeSteps,
   whoseTurn,
+  type Deal,
 } from "@/lib/marketplace-rules";
 
 type Data = MarketData & { currentUserId: string | null; loaded: boolean };

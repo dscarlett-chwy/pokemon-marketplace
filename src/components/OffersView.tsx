@@ -6,7 +6,8 @@ import { useMemo, useState } from "react";
 import { METHOD_LABELS } from "@/lib/exchange";
 import type { Offer, Party } from "@/lib/types";
 import { useHydrated } from "@/store/hydration";
-import { latestTerms, needsAction, partyOf, useMarketplace, useMe } from "@/store/marketplace";
+import { leadCard } from "@/lib/dashboard";
+import { dealOf, latestTerms, needsAction, partyOf, useMarketplace, useMe } from "@/store/marketplace";
 import { CardImage } from "./CardImage";
 import { OfferThread } from "./OfferThread";
 import { termsText } from "./TermsSummary";
@@ -48,7 +49,7 @@ export function OffersView() {
   const mine = useMemo(
     () =>
       Object.values(offers)
-        .filter((o) => partyOf(o, me) && cards[items[listings[o.listingId]?.itemId]?.cardId])
+        .filter((o) => partyOf(o, me) && leadCard({ listings, items, cards }, o))
         .sort((a, b) => rank(a, me) - rank(b, me) || b.updatedAt.localeCompare(a.updatedAt)),
     [offers, listings, items, cards, me],
   );
@@ -108,9 +109,8 @@ export function OffersView() {
           <div className="grid gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
             <ul className="space-y-2" aria-label={tab === "seller" ? "Offers on your cards" : "Offers you made"}>
               {shown.map((offer) => {
-                const listing = listings[offer.listingId];
-                const item = items[listing.itemId];
-                const card = cards[item.cardId];
+                const direct = !dealOf(listings, offer).listing;
+                const card = leadCard({ listings, items, cards }, offer)!;
                 const other = users[tab === "seller" ? offer.buyerId : offer.sellerId];
                 const r = rank(offer, me);
                 const terms = latestTerms(offer);
@@ -131,9 +131,10 @@ export function OffersView() {
                         <CardImage card={card} sizes="48px" />
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate font-semibold">{card.name}</span>
+                        <span className="block truncate font-semibold">{direct ? `Trade with ${other.name}` : card.name}</span>
                         <span className="block truncate text-sm text-ink-soft">
-                          {tab === "seller" ? `From ${other.name}` : `To ${other.name}`}, {termsText(terms, nameFor)},{" "}
+                          {direct ? "Direct" : tab === "seller" ? `From ${other.name}` : `To ${other.name}`},{" "}
+                          {termsText(terms, nameFor, direct)},{" "}
                           {METHOD_LABELS[terms.exchange.method].toLowerCase()}
                         </span>
                       </span>
