@@ -1,14 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 import { useListingRows } from "@/lib/listing-rows";
 import type { User } from "@/lib/types";
 import { useHydrated } from "@/store/hydration";
-import { tradeableItems, useMarketplace } from "@/store/marketplace";
+import { dealOf, tradeableItems, useMarketplace } from "@/store/marketplace";
+import { useNotice } from "@/store/notice";
 import { CardImage } from "./CardImage";
 import { CardTile } from "./CardTile";
 import { CopyLinkButton } from "./CopyLinkButton";
+import { OfferForm } from "./OfferForm";
 import { SignInPrompt } from "./SignInGate";
 import { CardGridSkeleton } from "./Skeletons";
 
@@ -16,17 +19,28 @@ const linkStyle = "font-medium text-accent underline decoration-accent/30 underl
 
 export function CollectorView({ user }: { user: User | null }) {
   const hydrated = useHydrated();
+  const router = useRouter();
   const me = useMarketplace((s) => s.currentUserId);
+  const users = useMarketplace((s) => s.users);
   const items = useMarketplace((s) => s.items);
   const listings = useMarketplace((s) => s.listings);
   const offers = useMarketplace((s) => s.offers);
   const cards = useMarketplace((s) => s.cards);
+  const makeDirectOffer = useMarketplace((s) => s.makeDirectOffer);
+  const show = useNotice((s) => s.show);
+  /** The cards asked for when the trade form opened, or null while it's closed. */
+  const [proposing, setProposing] = useState<string[] | null>(null);
   const rows = useListingRows();
   const forSale = rows.filter((r) => r.listing.sellerId === user?.id && r.listing.status === "active");
   const open = useMemo(
     () => (user ? tradeableItems({ items, listings, offers }, user.id).reverse() : []),
     [items, listings, offers, user],
   );
+
+  // Collectors with nothing visible aren't in the shared data, but a direct offer needs to know them.
+  useEffect(() => {
+    if (user && hydrated && !users[user.id]) useMarketplace.setState((s) => ({ users: { ...s.users, [user.id]: user } }));
+  }, [user, users, hydrated]);
 
   if (!user) {
     return (
@@ -43,6 +57,19 @@ export function CollectorView({ user }: { user: User | null }) {
 
   const isMe = user.id === me;
   const path = `/u/${user.handle}`;
+  const openOffer =
+    me &&
+    Object.values(offers).find(
+      (o) =>
+        o.listingId === null &&
+        o.status === "pending" &&
+        [o.buyerId, o.sellerId].includes(me) &&
+        [o.buyerId, o.sellerId].includes(user.id),
+    );
+  const ask = (itemIds: string[]) => {
+    setProposing(itemIds);
+    requestAnimationFrame(() => document.getElementById("trade-heading")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  };
 
   return (
     <div className="space-y-12">
@@ -63,6 +90,55 @@ export function CollectorView({ user }: { user: User | null }) {
         </div>
         <CopyLinkButton path={path} />
       </div>
+
+      {me && !isMe && (
+        <section aria-labelledby="trade-heading" className="max-w-2xl scroll-mt-24 rounded-3xl border border-rule bg-surface p-5 shadow-panel sm:p-7">
+          <h2 id="trade-heading" className="font-display text-xl font-bold">
+            Trade with {user.name}
+          </h2>
+          {openOffer ? (
+            <p className="mt-1">
+              You already have an open offer with {user.name}.{" "}
+              <Link href={`/offers?offer=${openOffer.id}`} className={linkStyle}>
+                View offer
+              </Link>
+            </p>
+          ) : proposing ? (
+            <div className="mt-4">
+              <OfferForm
+                deal={dealOf(listings, { listingId: null, sellerId: user.id })}
+                buyerId={me}
+                initial={{ buyer: { cash: 0, itemIds: [] }, seller: { cash: 0, itemIds: proposing } }}
+                submitLabel="Send offer"
+                names={{ buyer: "You", seller: user.name }}
+                onCancel={() => setProposing(null)}
+                onSubmit={(terms, message) => {
+                  const result = makeDirectOffer(user.id, terms, message);
+                  if (result.ok) {
+                    show(`Offer sent to ${user.name}`);
+                    router.push(`/offers?offer=${result.id}`);
+                  }
+                  return result;
+                }}
+              />
+            </div>
+          ) : (
+            <>
+              <p className="mt-1 text-ink-soft">
+                Offer cash, your cards, or both for any of the cards {user.name} is open to trading. It goes straight to them, no
+                listing needed.
+              </p>
+              <button
+                type="button"
+                onClick={() => ask([])}
+                className="mt-4 rounded-full bg-accent px-5 py-3 font-semibold text-white hover:bg-accent-deep"
+              >
+                Propose a trade
+              </button>
+            </>
+          )}
+        </section>
+      )}
 
       <section aria-labelledby="for-sale-heading" className="space-y-4">
         <h2 id="for-sale-heading" className="font-display text-title font-bold">
@@ -113,6 +189,11 @@ export function CollectorView({ user }: { user: User | null }) {
                   <p className="truncate text-xs text-ink-soft">
                     {card.set.name}, {item.condition}
                   </p>
+                  {!isMe && !openOffer && !proposing && (
+                    <button type="button" onClick={() => ask([item.id])} className={`mt-1 text-sm ${linkStyle}`}>
+                      Ask for this card<span className="sr-only">: {card.name}</span>
+                    </button>
+                  )}
                 </li>
               );
             })}
