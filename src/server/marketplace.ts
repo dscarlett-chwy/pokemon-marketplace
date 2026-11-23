@@ -18,6 +18,8 @@ import {
 } from "@/lib/types";
 import { getDb, readMarket, resetMarket, transaction, writeChanges } from "./db";
 
+export { addUser, isUser } from "./db";
+
 const INVALID: Result = { ok: false, error: "That request wasn't valid. Refresh the page and try again." };
 const MAX_TEXT = 280;
 const MAX_TRADE_CARDS = 50;
@@ -61,8 +63,8 @@ const isExchange = (v: unknown): v is Exchange => {
   return e.method === "ship" ? e.paidBy === "buyer" || e.paidBy === "seller" : isText(e.meetup);
 };
 
-function loadMarket(): MarketData {
-  return readMarket(getDb());
+async function loadMarket(): Promise<MarketData> {
+  return readMarket(await getDb());
 }
 
 /**
@@ -70,8 +72,8 @@ function loadMarket(): MarketData {
  * a trading partner to add, and every listing. Closed listings stay public so their links still
  * work, but who bought the card doesn't. Rules still run against the full market.
  */
-export function marketFor(viewer: string | null): MarketData {
-  const full = loadMarket();
+export async function marketFor(viewer: string | null): Promise<MarketData> {
+  const full = await loadMarket();
   const { listings } = full;
   const offers = Object.fromEntries(
     Object.entries(full.offers).filter(([, o]) => viewer !== null && (o.buyerId === viewer || o.sellerId === viewer)),
@@ -125,29 +127,20 @@ export function marketFor(viewer: string | null): MarketData {
   return { users, cards, items, listings, offers };
 }
 
-export function isUser(userId: string) {
-  return getDb().prepare("SELECT 1 FROM users WHERE id = ?").get(userId) !== undefined;
-}
-
-export function addUser(userId: string, name: string) {
-  getDb().prepare("INSERT OR IGNORE INTO users (id, name) VALUES (?, ?)").run(userId, name);
-}
-
 /** Re-runs a rule against the stored market and saves its changes in one transaction. */
-function apply(me: string, rule: (m: MarketData, me: string) => rules.Outcome): Result {
-  const db = getDb();
-  return transaction(db, () => {
-    const before = readMarket(db);
+function apply(me: string, rule: (m: MarketData, me: string) => rules.Outcome): Promise<Result> {
+  return transaction(async (tx) => {
+    const before = await readMarket(tx);
     if (!before.users[me]) return INVALID;
     const { result, market } = rule(before, me);
-    if (result.ok) writeChanges(db, before, market);
+    if (result.ok) await writeChanges(tx, before, market);
     return result;
   });
 }
 
 export async function addCard(me: string, cardId: unknown, condition: unknown, id: unknown): Promise<Result> {
   if (!isRef(cardId) || !CONDITIONS.includes(condition as Condition) || !isNewId(id, "i")) return INVALID;
-  const card = loadMarket().cards[cardId] ?? (await lookUpCard(cardId));
+  const card = (await loadMarket()).cards[cardId] ?? (await lookUpCard(cardId));
   if (typeof card === "string") return { ok: false, error: card };
   return apply(me, (m) => rules.addCard(m, me, card, condition as Condition, id));
 }
@@ -161,7 +154,7 @@ async function lookUpCard(cardId: string): Promise<Card | string> {
   }
 }
 
-export function createListing(me: string, input: unknown, id: unknown): Result {
+export async function createListing(me: string, input: unknown, id: unknown): Promise<Result> {
   const i = input as rules.ListingInput;
   if (typeof i !== "object" || i === null || !isNewId(id, "l")) return INVALID;
   if (!isRef(i.itemId) || typeof i.askingPrice !== "number" || typeof i.openToTrades !== "boolean" || !isText(i.note)) {
@@ -179,44 +172,42 @@ export function createListing(me: string, input: unknown, id: unknown): Result {
   return apply(me, (m) => rules.createListing(m, me, clean, id));
 }
 
-export function withdrawListing(me: string, listingId: unknown): Result {
+export async function withdrawListing(me: string, listingId: unknown): Promise<Result> {
   if (!isRef(listingId)) return INVALID;
   return apply(me, (m) => rules.withdrawListing(m, me, listingId));
 }
 
-export function makeOffer(me: string, listingId: unknown, terms: unknown, message: unknown, id: unknown): Result {
+export async function makeOffer(me: string, listingId: unknown, terms: unknown, message: unknown, id: unknown): Promise<Result> {
   if (!isRef(listingId) || !isTerms(terms) || !isText(message) || !isNewId(id, "o")) return INVALID;
   return apply(me, (m) => rules.makeOffer(m, me, listingId, cleanTerms(terms), message, id));
 }
 
-export function counterOffer(me: string, offerId: unknown, terms: unknown, message: unknown): Result {
+export async function counterOffer(me: string, offerId: unknown, terms: unknown, message: unknown): Promise<Result> {
   if (!isRef(offerId) || !isTerms(terms) || !isText(message)) return INVALID;
   return apply(me, (m) => rules.counterOffer(m, me, offerId, cleanTerms(terms), message));
 }
 
-export function acceptOffer(me: string, offerId: unknown): Result {
+export async function acceptOffer(me: string, offerId: unknown): Promise<Result> {
   if (!isRef(offerId)) return INVALID;
   return apply(me, (m) => rules.acceptOffer(m, me, offerId));
 }
 
-export function declineOffer(me: string, offerId: unknown): Result {
+export async function declineOffer(me: string, offerId: unknown): Promise<Result> {
   if (!isRef(offerId)) return INVALID;
   return apply(me, (m) => rules.declineOffer(m, me, offerId));
 }
 
-export function completeStep(me: string, offerId: unknown, step: unknown): Result {
+export async function completeStep(me: string, offerId: unknown, step: unknown): Promise<Result> {
   if (!isRef(offerId) || !TRADE_STEPS.includes(step as TradeStep)) return INVALID;
   return apply(me, (m) => rules.completeStep(m, me, offerId, step as TradeStep));
 }
 
-export function cancelTrade(me: string, offerId: unknown): Result {
+export async function cancelTrade(me: string, offerId: unknown): Promise<Result> {
   if (!isRef(offerId)) return INVALID;
   return apply(me, (m) => rules.cancelTrade(m, me, offerId));
 }
 
 /** Accounts survive a reset; their cards, listings and offers don't. */
 export function resetDemo() {
-  const users = Object.values(loadMarket().users);
-  resetMarket(getDb());
-  for (const user of users) addUser(user.id, user.name);
+  return resetMarket();
 }

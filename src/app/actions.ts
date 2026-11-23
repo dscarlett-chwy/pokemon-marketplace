@@ -6,7 +6,7 @@ import { getViewer } from "@/server/viewer";
 
 export type Synced = { result: Result; market: MarketData };
 
-const synced = (result: Result, me: string | null): Synced => ({ result, market: market.marketFor(me) });
+const synced = async (result: Result, me: string | null): Promise<Synced> => ({ result, market: await market.marketFor(me) });
 
 async function asViewer(run: (me: string) => Result | Promise<Result>): Promise<Synced> {
   const me = await getViewer();
@@ -53,8 +53,8 @@ export async function resetDemo() {
   if (process.env.NODE_ENV === "production") {
     return synced({ ok: false, error: "Resetting the demo is only available in development." }, await getViewer());
   }
-  return asViewer((me) => {
-    market.resetDemo();
+  return asViewer(async (me) => {
+    await market.resetDemo();
     return { ok: true, id: me };
   });
 }

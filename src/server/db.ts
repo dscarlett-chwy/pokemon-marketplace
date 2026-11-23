@@ -1,22 +1,21 @@
 import "server-only";
-import { mkdirSync } from "node:fs";
-import { dirname, resolve } from "node:path";
-import { DatabaseSync, type SQLInputValue } from "node:sqlite";
+import postgres, { type Sql } from "postgres";
 import type { Card } from "@/lib/card";
-import { defaultPayment } from "@/lib/marketplace-rules";
 import { seedMarket } from "@/lib/seed";
 import type {
   Condition,
-  Exchange,
   ExchangeMethod,
   ListingStatus,
   MarketData,
   OfferRound,
   OfferStatus,
-  OfferTerms,
   Trade,
 } from "@/lib/types";
 
+/**
+ * Row level security is on with no policies, so Supabase's public Data API can't read or write these
+ * tables. The app connects as the table owner, which bypasses it.
+ */
 const SCHEMA = `
   CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,
@@ -24,205 +23,170 @@ const SCHEMA = `
   );
   CREATE TABLE IF NOT EXISTS cards (
     id TEXT PRIMARY KEY,
-    data TEXT NOT NULL
+    data JSONB NOT NULL
   );
   CREATE TABLE IF NOT EXISTS items (
     id TEXT PRIMARY KEY,
     owner_id TEXT NOT NULL REFERENCES users(id),
     card_id TEXT NOT NULL REFERENCES cards(id),
-    condition TEXT NOT NULL
+    condition TEXT NOT NULL,
+    seq BIGINT GENERATED ALWAYS AS IDENTITY
   );
   CREATE TABLE IF NOT EXISTS listings (
     id TEXT PRIMARY KEY,
     item_id TEXT NOT NULL REFERENCES items(id),
     seller_id TEXT NOT NULL REFERENCES users(id),
-    asking_price REAL NOT NULL,
-    open_to_trades INTEGER NOT NULL,
-    exchange_methods TEXT NOT NULL,
+    asking_price DOUBLE PRECISION NOT NULL,
+    open_to_trades BOOLEAN NOT NULL,
+    exchange_methods JSONB NOT NULL,
     area TEXT NOT NULL,
     note TEXT NOT NULL,
     status TEXT NOT NULL,
-    created_at TEXT NOT NULL
+    created_at TEXT NOT NULL,
+    seq BIGINT GENERATED ALWAYS AS IDENTITY
   );
   CREATE TABLE IF NOT EXISTS offers (
     id TEXT PRIMARY KEY,
     listing_id TEXT NOT NULL REFERENCES listings(id),
     buyer_id TEXT NOT NULL REFERENCES users(id),
     seller_id TEXT NOT NULL REFERENCES users(id),
-    rounds TEXT NOT NULL,
+    rounds JSONB NOT NULL,
     status TEXT NOT NULL,
     closed_reason TEXT,
-    trade TEXT,
-    updated_at TEXT NOT NULL
+    trade JSONB,
+    updated_at TEXT NOT NULL,
+    seq BIGINT GENERATED ALWAYS AS IDENTITY
   );
+  ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+  ALTER TABLE cards ENABLE ROW LEVEL SECURITY;
+  ALTER TABLE items ENABLE ROW LEVEL SECURITY;
+  ALTER TABLE listings ENABLE ROW LEVEL SECURITY;
+  ALTER TABLE offers ENABLE ROW LEVEL SECURITY;
 `;
 
 type Table = keyof MarketData;
 /** Parents before children, so inserts satisfy the foreign keys. */
 const TABLES: Table[] = ["users", "cards", "items", "listings", "offers"];
 
-const UPSERT: Record<Table, string> = {
-  users: `INSERT INTO users (id, name) VALUES ($id, $name)
-    ON CONFLICT(id) DO UPDATE SET name = excluded.name`,
-  cards: `INSERT INTO cards (id, data) VALUES ($id, $data)
-    ON CONFLICT(id) DO UPDATE SET data = excluded.data`,
-  items: `INSERT INTO items (id, owner_id, card_id, condition) VALUES ($id, $ownerId, $cardId, $condition)
-    ON CONFLICT(id) DO UPDATE SET owner_id = excluded.owner_id, card_id = excluded.card_id, condition = excluded.condition`,
-  listings: `INSERT INTO listings
-      (id, item_id, seller_id, asking_price, open_to_trades, exchange_methods, area, note, status, created_at)
-    VALUES ($id, $itemId, $sellerId, $askingPrice, $openToTrades, $exchangeMethods, $area, $note, $status, $createdAt)
-    ON CONFLICT(id) DO UPDATE SET asking_price = excluded.asking_price, open_to_trades = excluded.open_to_trades,
-      exchange_methods = excluded.exchange_methods, area = excluded.area, note = excluded.note, status = excluded.status`,
-  offers: `INSERT INTO offers (id, listing_id, buyer_id, seller_id, rounds, status, closed_reason, trade, updated_at)
-    VALUES ($id, $listingId, $buyerId, $sellerId, $rounds, $status, $closedReason, $trade, $updatedAt)
-    ON CONFLICT(id) DO UPDATE SET rounds = excluded.rounds, status = excluded.status,
-      closed_reason = excluded.closed_reason, trade = excluded.trade, updated_at = excluded.updated_at`,
+/** Columns each upsert may change. Ownership of listings and offers never moves. */
+const UPDATABLE: Record<Table, string[]> = {
+  users: ["name"],
+  cards: ["data"],
+  items: ["owner_id", "card_id", "condition"],
+  listings: ["asking_price", "open_to_trades", "exchange_methods", "area", "note", "status"],
+  offers: ["rounds", "status", "closed_reason", "trade", "updated_at"],
 };
 
-type Params = Record<string, SQLInputValue>;
+type Params = Record<string, unknown>;
+/** The pool, or one transaction on it. */
+type Db = postgres.ISql;
 
 const toParams = {
-  users: (u: MarketData["users"][string]): Params => ({ ...u }),
-  cards: (c: Card): Params => ({ id: c.id, data: JSON.stringify(c) }),
-  items: (i: MarketData["items"][string]): Params => ({ ...i }),
+  users: (u: MarketData["users"][string]): Params => ({ id: u.id, name: u.name }),
+  cards: (c: Card): Params => ({ id: c.id, data: c }),
+  items: (i: MarketData["items"][string]): Params => ({
+    id: i.id,
+    owner_id: i.ownerId,
+    card_id: i.cardId,
+    condition: i.condition,
+  }),
   listings: (l: MarketData["listings"][string]): Params => ({
-    ...l,
-    openToTrades: l.openToTrades ? 1 : 0,
-    exchangeMethods: JSON.stringify(l.exchangeMethods),
+    id: l.id,
+    item_id: l.itemId,
+    seller_id: l.sellerId,
+    asking_price: l.askingPrice,
+    open_to_trades: l.openToTrades,
+    exchange_methods: l.exchangeMethods,
+    area: l.area,
+    note: l.note,
+    status: l.status,
+    created_at: l.createdAt,
   }),
   offers: (o: MarketData["offers"][string]): Params => ({
-    ...o,
-    rounds: JSON.stringify(o.rounds),
-    trade: o.trade && JSON.stringify(o.trade),
+    id: o.id,
+    listing_id: o.listingId,
+    buyer_id: o.buyerId,
+    seller_id: o.sellerId,
+    rounds: o.rounds,
+    status: o.status,
+    closed_reason: o.closedReason,
+    trade: o.trade,
+    updated_at: o.updatedAt,
   }),
 };
 
-type Row = Record<string, string | number | null>;
+/** Vercel's Supabase integration adds a `supa` parameter that the pooler would reject as a startup setting. */
+function connectionUrl() {
+  const raw = process.env.POSTGRES_URL ?? process.env.DATABASE_URL;
+  if (!raw) throw new Error("Set POSTGRES_URL to your Supabase connection string. See the README.");
+  const url = new URL(raw);
+  url.searchParams.delete("supa");
+  return url.toString();
+}
 
-const columns = (db: DatabaseSync, table: Table) =>
-  (db.prepare(`PRAGMA table_info(${table})`).all() as Row[]).map((c) => c.name);
+/** Every write takes this lock first, so rules always see the market as the previous write left it. */
+const WRITE_LOCK = 7_310_431;
 
-/** Upgrades databases saved by older versions. `PRAGMA user_version` counts the steps already applied. */
-const MIGRATIONS: ((db: DatabaseSync) => void)[] = [
-  (db) => {
-    if (columns(db, "listings").includes("exchange_methods")) return;
-    db.exec(`
-      ALTER TABLE listings ADD COLUMN exchange_methods TEXT NOT NULL DEFAULT '["pickup","dropoff","ship"]';
-      ALTER TABLE listings ADD COLUMN area TEXT NOT NULL DEFAULT '';
-    `);
-  },
-  (db) => {
-    const allowed = new Map(
-      all(db, "SELECT id, exchange_methods FROM listings").map((r) => [r.id, JSON.parse(r.exchange_methods as string)]),
-    );
-    const update = db.prepare("UPDATE offers SET rounds = $rounds WHERE id = $id");
-    for (const r of all(db, "SELECT id, listing_id, rounds FROM offers")) {
-      const rounds = JSON.parse(r.rounds as string) as OfferRound[];
-      if (rounds.every((round) => round.terms.exchange)) continue;
-      const methods = (allowed.get(r.listing_id) ?? ["ship"]) as ExchangeMethod[];
-      const fallback: Exchange = methods.includes("ship")
-        ? { method: "ship", paidBy: "buyer" }
-        : { method: methods[0] as "pickup" | "dropoff", meetup: "" };
-      const filled = rounds.map((round) => ({ ...round, terms: { ...round.terms, exchange: round.terms.exchange ?? fallback } }));
-      update.run({ id: r.id, rounds: JSON.stringify(filled) });
-    }
-  },
-  (db) => {
-    type OneSided = { cash: number; itemIds: string[]; exchange: Exchange };
-    const update = db.prepare("UPDATE offers SET rounds = $rounds WHERE id = $id");
-    for (const r of all(db, "SELECT id, rounds FROM offers")) {
-      const rounds = JSON.parse(r.rounds as string) as { terms: OneSided | OfferTerms }[];
-      const split = rounds.map((round) => {
-        if ("buyer" in round.terms) return round;
-        const { cash, itemIds, exchange } = round.terms;
-        return { ...round, terms: { buyer: { cash, itemIds }, seller: { cash: 0, itemIds: [] }, exchange } };
-      });
-      update.run({ id: r.id, rounds: JSON.stringify(split) });
-    }
-  },
-  (db) => {
-    const update = db.prepare("UPDATE offers SET rounds = $rounds WHERE id = $id");
-    for (const r of all(db, "SELECT id, rounds FROM offers")) {
-      const rounds = JSON.parse(r.rounds as string) as OfferRound[];
-      const paid = rounds.map((round) => {
-        const { terms } = round;
-        if (terms.payment !== undefined) return round;
-        const payment = terms.buyer.cash + terms.seller.cash > 0 ? defaultPayment(terms.exchange.method) : null;
-        return { ...round, terms: { ...terms, payment } };
-      });
-      update.run({ id: r.id, rounds: JSON.stringify(paid) });
-    }
-  },
-  (db) => {
-    if (!columns(db, "offers").includes("trade")) db.exec("ALTER TABLE offers ADD COLUMN trade TEXT");
-    // Offers accepted before trades existed already moved their cards, so they count as finished trades.
-    const update = db.prepare("UPDATE offers SET trade = $trade WHERE id = $id");
-    for (const r of all(db, "SELECT id, updated_at FROM offers WHERE status = 'accepted' AND trade IS NULL")) {
-      const trade: Trade = {
-        status: "complete",
-        done: { buyer: [], seller: [] },
-        cancelledBy: null,
-        startedAt: r.updated_at as string,
-      };
-      update.run({ id: r.id, trade: JSON.stringify(trade) });
-    }
-  },
-];
-
-function migrate(db: DatabaseSync) {
-  const { user_version: version } = db.prepare("PRAGMA user_version").get() as { user_version: number };
-  if (version >= MIGRATIONS.length) return;
-  transaction(db, () => {
-    for (const step of MIGRATIONS.slice(version)) step(db);
-    db.exec(`PRAGMA user_version = ${MIGRATIONS.length}`);
+function open() {
+  return postgres(connectionUrl(), {
+    // Supabase's transaction pooler can't keep prepared statements or pipelined queries.
+    prepare: false,
+    max_pipeline: 1,
+    query_timeout: 30,
+    onnotice: false,
   });
 }
 
-function open() {
-  const path = resolve(/*turbopackIgnore: true*/ process.env.DATABASE_PATH ?? "data/marketplace.db");
-  mkdirSync(dirname(path), { recursive: true });
-  const db = new DatabaseSync(path);
-  db.exec("PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;");
-  db.exec(SCHEMA);
-  const { count } = db.prepare("SELECT COUNT(*) AS count FROM users").get() as { count: number };
-  if (count === 0) transaction(db, () => writeChanges(db, emptyMarket(), seedMarket()));
-  return db;
+const globalForDb = globalThis as unknown as { marketplaceDb?: Sql; marketplaceReady?: Promise<Sql> };
+
+async function setUp(sql: Sql) {
+  await sql.begin(async (tx) => {
+    await tx`SELECT pg_advisory_xact_lock(${WRITE_LOCK})`;
+    await tx.unsafe(SCHEMA);
+    const [{ count }] = await tx<{ count: number }[]>`SELECT COUNT(*)::int AS count FROM users`;
+    if (count === 0) await writeChanges(tx, emptyMarket(), seedMarket());
+  });
+  return sql;
 }
 
-const globalForDb = globalThis as unknown as { marketplaceDb?: DatabaseSync };
-
-export function getDb() {
+export function getDb(): Promise<Sql> {
   globalForDb.marketplaceDb ??= open();
-  // Hot reloads keep the open connection, so code with newer migrations still has to apply them.
-  migrate(globalForDb.marketplaceDb);
-  return globalForDb.marketplaceDb;
+  globalForDb.marketplaceReady ??= setUp(globalForDb.marketplaceDb).catch((error) => {
+    globalForDb.marketplaceReady = undefined;
+    throw error;
+  });
+  return globalForDb.marketplaceReady;
 }
 
 const emptyMarket = (): MarketData => ({ users: {}, cards: {}, items: {}, listings: {}, offers: {} });
 
-export function transaction<T>(db: DatabaseSync, run: () => T): T {
-  db.exec("BEGIN IMMEDIATE");
-  try {
-    const result = run();
-    db.exec("COMMIT");
-    return result;
-  } catch (error) {
-    db.exec("ROLLBACK");
-    throw error;
-  }
+/** Runs `run` in one transaction that holds the write lock. */
+export async function transaction<T>(run: (tx: Db) => Promise<T>): Promise<T> {
+  const sql = await getDb();
+  return sql.begin(async (tx) => {
+    await tx`SELECT pg_advisory_xact_lock(${WRITE_LOCK})`;
+    return run(tx);
+  }) as Promise<T>;
 }
 
-const all = (db: DatabaseSync, sql: string) => db.prepare(sql).all() as Row[];
+type Row = Record<string, unknown>;
 
-export function readMarket(db: DatabaseSync): MarketData {
+export async function readMarket(sql: Db): Promise<MarketData> {
+  const [users, cards, items, listings, offers] = await Promise.all([
+    sql<Row[]>`SELECT * FROM users`,
+    sql<Row[]>`SELECT * FROM cards`,
+    sql<Row[]>`SELECT * FROM items ORDER BY seq`,
+    sql<Row[]>`SELECT * FROM listings ORDER BY seq`,
+    sql<Row[]>`SELECT * FROM offers ORDER BY seq`,
+  ]);
   const market = emptyMarket();
-  for (const r of all(db, "SELECT * FROM users")) {
+  for (const r of users) {
     market.users[r.id as string] = { id: r.id as string, name: r.name as string };
   }
-  for (const r of all(db, "SELECT * FROM cards")) {
-    market.cards[r.id as string] = JSON.parse(r.data as string) as Card;
+  for (const r of cards) {
+    market.cards[r.id as string] = r.data as Card;
   }
-  for (const r of all(db, "SELECT * FROM items ORDER BY rowid")) {
+  for (const r of items) {
     market.items[r.id as string] = {
       id: r.id as string,
       ownerId: r.owner_id as string,
@@ -230,30 +194,30 @@ export function readMarket(db: DatabaseSync): MarketData {
       condition: r.condition as Condition,
     };
   }
-  for (const r of all(db, "SELECT * FROM listings ORDER BY rowid")) {
+  for (const r of listings) {
     market.listings[r.id as string] = {
       id: r.id as string,
       itemId: r.item_id as string,
       sellerId: r.seller_id as string,
       askingPrice: r.asking_price as number,
-      openToTrades: r.open_to_trades === 1,
-      exchangeMethods: JSON.parse(r.exchange_methods as string) as ExchangeMethod[],
+      openToTrades: r.open_to_trades as boolean,
+      exchangeMethods: r.exchange_methods as ExchangeMethod[],
       area: r.area as string,
       note: r.note as string,
       status: r.status as ListingStatus,
       createdAt: r.created_at as string,
     };
   }
-  for (const r of all(db, "SELECT * FROM offers ORDER BY rowid")) {
+  for (const r of offers) {
     market.offers[r.id as string] = {
       id: r.id as string,
       listingId: r.listing_id as string,
       buyerId: r.buyer_id as string,
       sellerId: r.seller_id as string,
-      rounds: JSON.parse(r.rounds as string) as OfferRound[],
+      rounds: r.rounds as OfferRound[],
       status: r.status as OfferStatus,
       closedReason: r.closed_reason as string | null,
-      trade: r.trade === null ? null : (JSON.parse(r.trade as string) as Trade),
+      trade: r.trade as Trade | null,
       updatedAt: r.updated_at as string,
     };
   }
@@ -261,19 +225,39 @@ export function readMarket(db: DatabaseSync): MarketData {
 }
 
 /** Saves every row that is new or was replaced between `before` and `after`. Rules never delete rows. */
-export function writeChanges(db: DatabaseSync, before: MarketData, after: MarketData) {
+export async function writeChanges(sql: Db, before: MarketData, after: MarketData) {
   for (const table of TABLES) {
-    const upsert = db.prepare(UPSERT[table]);
     const toRow = toParams[table] as (row: unknown) => Params;
-    for (const [id, row] of Object.entries(after[table])) {
-      if (before[table][id] !== row) upsert.run(toRow(row));
-    }
+    const rows = Object.entries(after[table])
+      .filter(([id, row]) => before[table][id] !== row)
+      .map(([, row]) => toRow(row));
+    if (rows.length === 0) continue;
+    const updates = UPDATABLE[table].map((c) => sql`${sql(c)} = excluded.${sql(c)}`);
+    await sql`
+      INSERT INTO ${sql(table)} ${sql(rows)}
+      ON CONFLICT (id) DO UPDATE SET ${sql`, `.join(updates)}
+    `;
   }
 }
 
-export function resetMarket(db: DatabaseSync) {
-  transaction(db, () => {
-    for (const table of [...TABLES].reverse()) db.exec(`DELETE FROM ${table}`);
-    writeChanges(db, emptyMarket(), seedMarket());
+export async function isUser(userId: string) {
+  const sql = await getDb();
+  const rows = await sql`SELECT 1 FROM users WHERE id = ${userId}`;
+  return rows.length > 0;
+}
+
+export async function addUser(userId: string, name: string) {
+  const sql = await getDb();
+  await sql`INSERT INTO users (id, name) VALUES (${userId}, ${name}) ON CONFLICT (id) DO NOTHING`;
+}
+
+/** Puts the demo data back. Accounts survive; their cards, listings and offers don't. */
+export async function resetMarket() {
+  await transaction(async (tx) => {
+    const users = await tx<{ id: string; name: string }[]>`SELECT id, name FROM users`;
+    for (const table of [...TABLES].reverse()) await tx`DELETE FROM ${tx(table)}`;
+    const seed = seedMarket();
+    for (const u of users) seed.users[u.id] ??= { id: u.id, name: u.name };
+    await writeChanges(tx, emptyMarket(), seed);
   });
 }
