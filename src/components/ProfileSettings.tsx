@@ -1,10 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { HANDLE_MAX } from "@/lib/handle";
 import { MAX_NAME } from "@/lib/marketplace-rules";
 import { useMarketplace, useMe } from "@/store/marketplace";
 import { useNotice } from "@/store/notice";
+import { CopyLinkButton } from "./CopyLinkButton";
 
 export function ProfileSettings() {
   const me = useMe();
@@ -32,6 +34,27 @@ export function ProfileSettings() {
           Your name and handle are public. Share your handle with collectors you know so they can find you and trade.
         </p>
       </div>
+
+      {user.handle && (
+        <section aria-labelledby="share-heading" className="space-y-3">
+          <h2 id="share-heading" className="font-display text-xl font-bold">
+            Share your profile
+          </h2>
+          <p className="text-ink-soft">
+            Send this link to collectors you know. Once they sign in, they can see the cards you&apos;re open to trading and
+            propose a trade.
+          </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              href={`/u/${user.handle}`}
+              className="font-medium text-accent underline decoration-accent/30 underline-offset-4 hover:decoration-accent"
+            >
+              /u/{user.handle}
+            </Link>
+            <CopyLinkButton path={`/u/${user.handle}`} />
+          </div>
+        </section>
+      )}
 
       <form onSubmit={submit} className="space-y-5 rounded-3xl border border-rule bg-surface p-6 shadow-panel sm:p-8" noValidate>
         <label className="block">

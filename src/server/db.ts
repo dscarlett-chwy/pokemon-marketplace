@@ -10,6 +10,7 @@ import type {
   OfferRound,
   OfferStatus,
   Trade,
+  User,
 } from "@/lib/types";
 
 /**
@@ -262,6 +263,12 @@ export async function isUser(userId: string) {
   const sql = await getDb();
   const rows = await sql`SELECT 1 FROM users WHERE id = ${userId}`;
   return rows.length > 0;
+}
+
+export async function userByHandle(handle: string): Promise<User | null> {
+  const sql = await getDb();
+  const [row] = await sql<User[]>`SELECT id, name, handle FROM users WHERE handle = ${handle}`;
+  return row ? { id: row.id, name: row.name, handle: row.handle } : null;
 }
 
 /** `handleSeed` is what the new handle is made from, like a username or display name. */

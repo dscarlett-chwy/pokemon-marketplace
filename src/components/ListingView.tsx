@@ -80,7 +80,15 @@ export function ListingView() {
             </div>
             <div>
               <dt className="text-sm text-ink-soft">Seller</dt>
-              <dd className="mt-0.5 font-semibold">{isMine ? "You" : seller.name}</dd>
+              <dd className="mt-0.5 font-semibold">
+                {isMine || !seller.handle ? (
+                  isMine ? "You" : seller.name
+                ) : (
+                  <Link href={`/u/${seller.handle}`} className="underline decoration-ink/25 underline-offset-4 hover:decoration-ink">
+                    {seller.name}
+                  </Link>
+                )}
+              </dd>
             </div>
             {card.marketPrice !== null && (
               <div>

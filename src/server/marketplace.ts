@@ -18,7 +18,7 @@ import {
 } from "@/lib/types";
 import { getDb, readMarket, transaction, writeChanges } from "./db";
 
-export { addUser, isUser } from "./db";
+export { addUser, isUser, userByHandle } from "./db";
 
 const INVALID: Result = { ok: false, error: "That request wasn't valid. Refresh the page and try again." };
 const MAX_TEXT = 280;
