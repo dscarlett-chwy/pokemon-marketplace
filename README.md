@@ -25,10 +25,9 @@ Everything is stored in [Supabase](https://supabase.com) Postgres, added to the 
   vercel env pull .env.development.local
   ```
 
-- On first start the tables are created and filled with the demo collectors, cards, listings and offers.
+- On first start the tables are created empty. Everything in them comes from real collectors: their accounts, the cards they add, and their listings and offers. Card details and prices come from the Pokemon TCG API when a card is added.
+- The pulled variables point at the same database as the live site, so anything done locally shows up there too.
 - Row level security is on with no policies, so Supabase's public Data API can't reach the tables; the app connects as their owner.
-- To start over, use **Reset demo data** in the footer.
-- Data from the earlier SQLite version can be copied over with `POSTGRES_URL=... node scripts/copy-sqlite-to-postgres.mjs`. It replaces what Postgres holds, and the app has to have started against Postgres once so the tables exist.
 
 ## Sign-in
 
@@ -36,8 +35,7 @@ Accounts use [Clerk](https://clerk.com). Anyone can browse the marketplace; maki
 
 - Locally, Clerk runs on temporary development keys in `.env.local` (gitignored), created by `npx clerk@latest init --accountless`. Run `npx clerk@latest auth login` to claim them into your own Clerk account.
 - Development keys accept test emails like `you+clerk_test@example.com` with the code `424242`.
-- Ash and Misty are demo sellers with no login. Use two browsers with two accounts to try both sides of a trade.
-- **Reset demo data** only shows when signed in, and only in development. Accounts survive a reset; their cards, listings and offers don't.
+- Use two browsers with two accounts to try both sides of a trade.
 
 ## Deploy to Vercel
 
