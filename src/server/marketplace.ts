@@ -154,6 +154,12 @@ async function lookUpCard(cardId: string): Promise<Card | string> {
   }
 }
 
+export async function setProfile(me: string, input: unknown): Promise<Result> {
+  const i = input as rules.ProfileInput;
+  if (typeof i !== "object" || i === null || !isText(i.name) || !isText(i.handle)) return INVALID;
+  return apply(me, (m) => rules.setProfile(m, me, { name: i.name, handle: i.handle }));
+}
+
 export async function createListing(me: string, input: unknown, id: unknown): Promise<Result> {
   const i = input as rules.ListingInput;
   if (typeof i !== "object" || i === null || !isNewId(id, "l")) return INVALID;

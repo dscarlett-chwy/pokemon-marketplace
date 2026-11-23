@@ -39,6 +39,12 @@ export function InventoryView() {
           <p className="tabular mt-3 text-lg text-ink-soft">
             {user.name}&apos;s collection, {mine.length === 1 ? "1 card" : `${mine.length} cards`}
           </p>
+          <Link
+            href="/profile"
+            className="mt-1 inline-block text-sm font-medium text-accent underline decoration-accent/30 underline-offset-4 hover:decoration-accent"
+          >
+            Your profile
+          </Link>
         </div>
         {!adding && (
           <button

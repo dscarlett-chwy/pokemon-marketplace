@@ -1,6 +1,7 @@
 "use client";
 
 import { SignInButton, UserButton, useAuth } from "@clerk/nextjs";
+import Link from "next/link";
 import { useMarketplace } from "@/store/marketplace";
 
 export function AccountMenu() {
@@ -24,7 +25,12 @@ export function AccountMenu() {
 
   return (
     <div className="flex items-center gap-3">
-      {name && <span className="hidden text-sm font-medium text-ink-soft sm:inline">{name}</span>}
+      {name && (
+        <Link href="/profile" className="hidden rounded-full px-2 py-1 text-sm font-medium text-ink-soft hover:bg-ink/5 hover:text-ink sm:inline">
+          {name}
+          <span className="sr-only">, edit your profile</span>
+        </Link>
+      )}
       <UserButton />
     </div>
   );

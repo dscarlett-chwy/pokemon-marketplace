@@ -1,5 +1,6 @@
 import type { Card } from "./card";
 import { METHOD_LABELS } from "./exchange";
+import { HANDLE_MAX, isHandle } from "./handle";
 import {
   EXCHANGE_METHODS,
   type Condition,
@@ -193,6 +194,24 @@ export function addCard(m: MarketData, me: string, card: Card, condition: Condit
     },
     id,
   );
+}
+
+export const MAX_NAME = 40;
+
+export type ProfileInput = { name: string; handle: string };
+
+export function setProfile(m: MarketData, me: string, input: ProfileInput): Outcome {
+  const user = m.users[me];
+  const name = input.name.trim();
+  const handle = input.handle.trim().toLowerCase();
+  if (!user) return fail(m, TAKEN);
+  if (!name) return fail(m, "Add a name so other collectors know who they're trading with.");
+  if (name.length > MAX_NAME) return fail(m, `Keep your name under ${MAX_NAME} characters.`);
+  if (!isHandle(handle)) {
+    return fail(m, `Use 3 to ${HANDLE_MAX} letters, numbers, or single hyphens for your handle, starting and ending with a letter or number.`);
+  }
+  if (Object.values(m.users).some((u) => u.id !== me && u.handle === handle)) return fail(m, "That handle is taken. Try another.");
+  return done({ ...m, users: { ...m.users, [me]: { ...user, name, handle } } }, me);
 }
 
 export type ListingInput = {

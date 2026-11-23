@@ -24,6 +24,7 @@ type Data = MarketData & { currentUserId: string | null; loaded: boolean };
 type Actions = {
   refresh: () => Promise<void>;
   addCard: (card: Card, condition: Condition) => Result;
+  setProfile: (input: rules.ProfileInput) => Result;
   createListing: (input: rules.ListingInput) => Result;
   withdrawListing: (listingId: string) => Result;
   makeOffer: (listingId: string, terms: OfferTerms, message: string) => Result;
@@ -112,6 +113,12 @@ export const useMarketplace = create<MarketplaceState>()((set, get) => {
         () => server.addCard(card.id, condition, id),
       );
     },
+
+    setProfile: (input) =>
+      run(
+        (m, me) => rules.setProfile(m, me, input),
+        () => server.setProfile(input),
+      ),
 
     createListing: (input) => {
       const id = rules.newId("l");
