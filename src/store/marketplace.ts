@@ -32,6 +32,7 @@ type Actions = {
   createListing: (input: rules.ListingInput) => Result;
   withdrawListing: (listingId: string) => Result;
   makeOffer: (listingId: string, terms: OfferTerms, message: string) => Result;
+  makeDirectOffer: (recipientId: string, terms: OfferTerms, message: string) => Result;
   counterOffer: (offerId: string, terms: OfferTerms, message: string) => Result;
   acceptOffer: (offerId: string) => Result;
   declineOffer: (offerId: string) => Result;
@@ -149,6 +150,14 @@ export const useMarketplace = create<MarketplaceState>()((set, get) => {
       return run(
         (m, me) => rules.makeOffer(m, me, listingId, terms, message, id),
         () => server.makeOffer(listingId, terms, message, id),
+      );
+    },
+
+    makeDirectOffer: (recipientId, terms, message) => {
+      const id = rules.newId("o");
+      return run(
+        (m, me) => rules.makeDirectOffer(m, me, recipientId, terms, message, id),
+        () => server.makeDirectOffer(recipientId, terms, message, id),
       );
     },
 

@@ -68,7 +68,7 @@ export const listingDeal = (listing: Listing): Deal => ({
 });
 
 export function dealOf(listings: Record<string, Listing>, offer: Pick<Offer, "listingId" | "sellerId">): Deal {
-  const listing = listings[offer.listingId];
+  const listing = offer.listingId === null ? undefined : listings[offer.listingId];
   if (listing) return listingDeal(listing);
   return { listing: null, sellerId: offer.sellerId, openToTrades: true, exchangeMethods: [...EXCHANGE_METHODS], area: "" };
 }
@@ -122,9 +122,8 @@ export function tradeSteps(offer: Offer): StepState[] {
   for (const party of ["buyer", "seller"] as const) {
     const paying = pays?.party === party;
     if (paying && terms.payment === "online") plan[party].push("pay");
-    if (party === "seller" || terms.buyer.itemIds.length > 0 || (paying && terms.payment === "in_person")) {
-      plan[party].push("send");
-    }
+    const givesCards = party === "seller" ? offer.listingId !== null || terms.seller.itemIds.length > 0 : terms.buyer.itemIds.length > 0;
+    if (givesCards || (paying && terms.payment === "in_person")) plan[party].push("send");
   }
   for (const party of ["buyer", "seller"] as const) {
     if (plan[other(party)].includes("send")) plan[party].push("receive");
@@ -161,7 +160,9 @@ function checkSide(m: MarketData, userId: string, side: Side): string | null {
 function checkTerms(m: MarketData, deal: Deal, buyerId: string, terms: OfferTerms): string | null {
   const { buyer, seller, exchange } = terms;
   if (![buyer.cash, seller.cash].every((c) => Number.isFinite(c) && c >= 0)) return "Cash must be zero or more.";
-  if (buyer.cash === 0 && buyer.itemIds.length === 0) return "The buyer has to give cash, cards, or both.";
+  const gives = (side: Side) => side.cash > 0 || side.itemIds.length > 0;
+  if (!deal.listing && !(gives(buyer) && gives(seller))) return "Each of you has to give cash, cards, or both.";
+  if (!gives(buyer)) return "The buyer has to give cash, cards, or both.";
   if (buyer.cash > 0 && seller.cash > 0) return "Only one side can add cash. Lower the other side's cash to $0.";
   if (!deal.openToTrades && buyer.itemIds.length + seller.itemIds.length > 0) {
     return "This seller only takes cash for this card.";
@@ -175,6 +176,9 @@ function checkTerms(m: MarketData, deal: Deal, buyerId: string, terms: OfferTerm
   }
   if (exchange.method !== "ship" && exchange.meetup.length > MAX_MEETUP) {
     return `Keep the meetup details under ${MAX_MEETUP} characters.`;
+  }
+  if (exchange.method !== "ship" && !deal.area && !exchange.meetup) {
+    return "Add a meetup spot and time so you both know where to meet.";
   }
   if (buyer.cash + seller.cash > 0) {
     if (terms.payment === null) return "Choose how the cash gets paid.";
@@ -340,6 +344,44 @@ export function makeOffer(
     listingId,
     buyerId: me,
     sellerId: listing.sellerId,
+    rounds: [{ by: "buyer", terms, message: message.trim(), at: now }],
+    status: "pending",
+    closedReason: null,
+    trade: null,
+    updatedAt: now,
+  };
+  return done({ ...m, offers: { ...m.offers, [id]: offer } }, id);
+}
+
+/** Whether the offer is a direct one between these two collectors, whoever sent it. */
+const directBetween = (o: Offer, a: string, b: string) =>
+  o.listingId === null && ((o.buyerId === a && o.sellerId === b) || (o.buyerId === b && o.sellerId === a));
+
+/** An offer to someone the sender knows, for cards they're open to trading. No listing is involved. */
+export function makeDirectOffer(
+  m: MarketData,
+  me: string,
+  recipientId: string,
+  rawTerms: OfferTerms,
+  message: string,
+  id: string,
+): Outcome {
+  const recipient = m.users[recipientId];
+  if (recipientId === me) return fail(m, "You can't send an offer to yourself.");
+  if (!recipient) return fail(m, "That collector isn't on Trade Binder.");
+  if (Object.values(m.offers).some((o) => o.status === "pending" && directBetween(o, me, recipientId))) {
+    return fail(m, `You already have an open offer with ${recipient.name}. Reply to it from Offers.`);
+  }
+  const terms = cleanTerms(rawTerms);
+  const problem = checkTerms(m, dealOf(m.listings, { listingId: null, sellerId: recipientId }), me, terms);
+  if (problem) return fail(m, problem);
+  if (m.offers[id]) return fail(m, TAKEN);
+  const now = new Date().toISOString();
+  const offer: Offer = {
+    id,
+    listingId: null,
+    buyerId: me,
+    sellerId: recipientId,
     rounds: [{ by: "buyer", terms, message: message.trim(), at: now }],
     status: "pending",
     closedReason: null,

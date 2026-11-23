@@ -108,7 +108,7 @@ export async function marketFor(viewer: string | null): Promise<MarketData> {
   }
   for (const o of Object.values(offers)) {
     const parties = [o.buyerId, o.sellerId];
-    const ids = [listings[o.listingId]?.itemId, ...o.rounds.flatMap((r) => rules.offeredItemIds(r.terms))];
+    const ids = [rules.dealOf(listings, o).listing?.itemId, ...o.rounds.flatMap((r) => rules.offeredItemIds(r.terms))];
     for (const id of ids) if (id) show(id, parties.includes(full.items[id]?.ownerId));
   }
 
@@ -194,6 +194,11 @@ export async function withdrawListing(me: string, listingId: unknown): Promise<R
 export async function makeOffer(me: string, listingId: unknown, terms: unknown, message: unknown, id: unknown): Promise<Result> {
   if (!isRef(listingId) || !isTerms(terms) || !isText(message) || !isNewId(id, "o")) return INVALID;
   return apply(me, (m) => rules.makeOffer(m, me, listingId, cleanTerms(terms), message, id));
+}
+
+export async function makeDirectOffer(me: string, recipientId: unknown, terms: unknown, message: unknown, id: unknown): Promise<Result> {
+  if (!isRef(recipientId) || !isTerms(terms) || !isText(message) || !isNewId(id, "o")) return INVALID;
+  return apply(me, (m) => rules.makeDirectOffer(m, me, recipientId, cleanTerms(terms), message, id));
 }
 
 export async function counterOffer(me: string, offerId: unknown, terms: unknown, message: unknown): Promise<Result> {

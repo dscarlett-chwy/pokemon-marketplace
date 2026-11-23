@@ -37,6 +37,10 @@ export async function makeOffer(listingId: unknown, terms: unknown, message: unk
   return asViewer((me) => market.makeOffer(me, listingId, terms, message, id));
 }
 
+export async function makeDirectOffer(recipientId: unknown, terms: unknown, message: unknown, id: unknown) {
+  return asViewer((me) => market.makeDirectOffer(me, recipientId, terms, message, id));
+}
+
 export async function counterOffer(offerId: unknown, terms: unknown, message: unknown) {
   return asViewer((me) => market.counterOffer(me, offerId, terms, message));
 }

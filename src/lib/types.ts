@@ -74,9 +74,13 @@ export type Trade = {
   startedAt: string;
 };
 
+/**
+ * An offer on a listing, or with `listingId` null, a direct offer one collector sends another.
+ * In a direct offer the sender is the "buyer" and the recipient the "seller", and neither gives a listed card.
+ */
 export type Offer = {
   id: string;
-  listingId: string;
+  listingId: string | null;
   buyerId: string;
   sellerId: string;
   rounds: OfferRound[];

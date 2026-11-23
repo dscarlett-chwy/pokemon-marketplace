@@ -65,6 +65,7 @@ const SCHEMA = `
   ALTER TABLE offers ENABLE ROW LEVEL SECURITY;
   ALTER TABLE users ADD COLUMN IF NOT EXISTS handle TEXT;
   ALTER TABLE items ADD COLUMN IF NOT EXISTS open_to_trade BOOLEAN NOT NULL DEFAULT true;
+  ALTER TABLE offers ALTER COLUMN listing_id DROP NOT NULL;
 `;
 
 /** Runs after SCHEMA and the handle backfill, since existing users need unique handles first. */
@@ -230,7 +231,7 @@ export async function readMarket(sql: Db): Promise<MarketData> {
   for (const r of offers) {
     market.offers[r.id as string] = {
       id: r.id as string,
-      listingId: r.listing_id as string,
+      listingId: r.listing_id as string | null,
       buyerId: r.buyer_id as string,
       sellerId: r.seller_id as string,
       rounds: r.rounds as OfferRound[],
