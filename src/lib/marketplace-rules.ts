@@ -357,6 +357,10 @@ export function makeOffer(
 const directBetween = (o: Offer, a: string, b: string) =>
   o.listingId === null && ((o.buyerId === a && o.sellerId === b) || (o.buyerId === b && o.sellerId === a));
 
+/** Direct offers can come from anyone with a profile link, so these keep one sender from flooding others. */
+export const MAX_OPEN_DIRECT_OFFERS = 10;
+export const DECLINE_COOLDOWN_HOURS = 24;
+
 /** An offer to someone the sender knows, for cards they're open to trading. No listing is involved. */
 export function makeDirectOffer(
   m: MarketData,
@@ -371,6 +375,22 @@ export function makeDirectOffer(
   if (!recipient) return fail(m, "That collector isn't on Trade Binder.");
   if (Object.values(m.offers).some((o) => o.status === "pending" && directBetween(o, me, recipientId))) {
     return fail(m, `You already have an open offer with ${recipient.name}. Reply to it from Offers.`);
+  }
+  const cooldownEnds = Object.values(m.offers)
+    .filter((o) => o.status === "declined" && directBetween(o, me, recipientId))
+    .filter((o) => (whoseTurn(o) === "buyer" ? o.buyerId : o.sellerId) === recipientId)
+    .map((o) => Date.parse(o.updatedAt) + DECLINE_COOLDOWN_HOURS * 3_600_000)
+    .reduce((latest, t) => Math.max(latest, t), 0);
+  if (cooldownEnds > Date.now()) {
+    const hours = Math.ceil((cooldownEnds - Date.now()) / 3_600_000);
+    return fail(
+      m,
+      `${recipient.name} declined your last offer. You can send another in ${hours === 1 ? "about an hour" : `about ${hours} hours`}.`,
+    );
+  }
+  const waiting = Object.values(m.offers).filter((o) => o.listingId === null && o.buyerId === me && o.status === "pending");
+  if (waiting.length >= MAX_OPEN_DIRECT_OFFERS) {
+    return fail(m, `You have ${MAX_OPEN_DIRECT_OFFERS} direct offers waiting for replies. Wait for some answers before sending more.`);
   }
   const terms = cleanTerms(rawTerms);
   const problem = checkTerms(m, dealOf(m.listings, { listingId: null, sellerId: recipientId }), me, terms);
