@@ -38,36 +38,43 @@ function toCard(c: ApiCard): Card {
   };
 }
 
-async function fetchJson<T>(path: string): Promise<T> {
+// Retries run here, inside the "use cache" functions: in production, once a cached
+// call throws, calling it again in the same request rethrows that error without
+// refetching, and the error's message and class are stripped. Returns null on 404.
+async function fetchJson<T>(path: string): Promise<T | null> {
   const headers: HeadersInit = {};
   if (process.env.POKEMONTCG_API_KEY) headers["X-Api-Key"] = process.env.POKEMONTCG_API_KEY;
-  // The signal also opts out of fetch deduplication, which otherwise hands every
-  // retry in a request the same failed response.
-  const res = await fetch(`${API}${path}`, { headers, signal: AbortSignal.timeout(TIMEOUT_MS) });
-  if (!res.ok) throw new Error(String(res.status));
-  return (await res.json()) as T;
-}
-
-// Errors thrown inside "use cache" lose their class, so retries and error typing
-// happen out here; only successful responses get cached.
-async function withRetry<T>(load: () => Promise<T>): Promise<T> {
   const failures: string[] = [];
   for (let attempt = 1; attempt <= ATTEMPTS; attempt++) {
     try {
-      return await load();
+      // The signal also opts out of fetch deduplication, which would otherwise
+      // hand every retry the same failed response.
+      const res = await fetch(`${API}${path}`, { headers, signal: AbortSignal.timeout(TIMEOUT_MS) });
+      if (res.ok) return (await res.json()) as T;
+      if (res.status === 404) return null;
+      failures.push(String(res.status));
+      if (res.status < 500 && res.status !== 429) break;
     } catch (error) {
-      failures.push((error as Error).message);
-      const status = Number((error as Error).message);
-      if (status === 404) throw new TcgUnavailableError("Card not found");
-      if (status >= 400 && status < 500 && status !== 429) throw new TcgUnavailableError(`Card search failed (${status})`);
+      failures.push((error as Error).name === "TimeoutError" ? "timeout" : (error as Error).message);
     }
     if (attempt < ATTEMPTS) await new Promise((r) => setTimeout(r, 250 * attempt));
   }
-  console.error(`Pokemon TCG API failed ${ATTEMPTS} times: ${failures.join(", ")}`);
-  throw new TcgUnavailableError("The Pokemon card catalog isn't responding right now");
+  console.error(`Pokemon TCG API failed for ${path}: ${failures.join(", ")}`);
+  throw new Error("Pokemon TCG API unavailable");
 }
 
-async function searchCardsCached(term: string, page: number): Promise<CardSearchResult> {
+async function load<T>(cached: () => Promise<T | null>): Promise<T> {
+  let result: T | null;
+  try {
+    result = await cached();
+  } catch {
+    throw new TcgUnavailableError("The Pokemon card catalog isn't responding right now");
+  }
+  if (result === null) throw new TcgUnavailableError("Card not found");
+  return result;
+}
+
+async function searchCardsCached(term: string, page: number): Promise<CardSearchResult | null> {
   "use cache";
   cacheLife("hours");
 
@@ -79,22 +86,22 @@ async function searchCardsCached(term: string, page: number): Promise<CardSearch
     orderBy: "-set.releaseDate",
   });
   const body = await fetchJson<{ data: ApiCard[]; page: number; totalCount: number }>(`/cards?${params}`);
-  return { cards: body.data.map(toCard), page: body.page, totalCount: body.totalCount };
+  return body && { cards: body.data.map(toCard), page: body.page, totalCount: body.totalCount };
 }
 
-async function getCardCached(id: string): Promise<Card> {
+async function getCardCached(id: string): Promise<Card | null> {
   "use cache";
   cacheLife("days");
 
   const body = await fetchJson<{ data: ApiCard }>(`/cards/${encodeURIComponent(id)}?select=${FIELDS}`);
-  return toCard(body.data);
+  return body && toCard(body.data);
 }
 
 export function searchCards(name: string, page: number) {
   const term = name.replace(/["\\*:()]/g, "").trim();
-  return withRetry(() => searchCardsCached(term, page));
+  return load(() => searchCardsCached(term, page));
 }
 
 export function getCard(id: string) {
-  return withRetry(() => getCardCached(id));
+  return load(() => getCardCached(id));
 }
