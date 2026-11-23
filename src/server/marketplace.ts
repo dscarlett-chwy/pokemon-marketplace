@@ -154,6 +154,11 @@ async function lookUpCard(cardId: string): Promise<Card | string> {
   }
 }
 
+export async function setOpenToTrade(me: string, itemId: unknown, open: unknown): Promise<Result> {
+  if (!isRef(itemId) || typeof open !== "boolean") return INVALID;
+  return apply(me, (m) => rules.setOpenToTrade(m, me, itemId, open));
+}
+
 export async function setProfile(me: string, input: unknown): Promise<Result> {
   const i = input as rules.ProfileInput;
   if (typeof i !== "object" || i === null || !isText(i.name) || !isText(i.handle)) return INVALID;

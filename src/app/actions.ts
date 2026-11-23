@@ -17,6 +17,10 @@ export async function addCard(cardId: unknown, condition: unknown, id: unknown) 
   return asViewer((me) => market.addCard(me, cardId, condition, id));
 }
 
+export async function setOpenToTrade(itemId: unknown, open: unknown) {
+  return asViewer((me) => market.setOpenToTrade(me, itemId, open));
+}
+
 export async function setProfile(input: unknown) {
   return asViewer((me) => market.setProfile(me, input));
 }

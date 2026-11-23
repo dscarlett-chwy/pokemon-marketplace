@@ -24,6 +24,7 @@ type Data = MarketData & { currentUserId: string | null; loaded: boolean };
 type Actions = {
   refresh: () => Promise<void>;
   addCard: (card: Card, condition: Condition) => Result;
+  setOpenToTrade: (itemId: string, open: boolean) => Result;
   setProfile: (input: rules.ProfileInput) => Result;
   createListing: (input: rules.ListingInput) => Result;
   withdrawListing: (listingId: string) => Result;
@@ -113,6 +114,12 @@ export const useMarketplace = create<MarketplaceState>()((set, get) => {
         () => server.addCard(card.id, condition, id),
       );
     },
+
+    setOpenToTrade: (itemId, open) =>
+      run(
+        (m, me) => rules.setOpenToTrade(m, me, itemId, open),
+        () => server.setOpenToTrade(itemId, open),
+      ),
 
     setProfile: (input) =>
       run(

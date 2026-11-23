@@ -57,7 +57,7 @@ function CardPicker({ ownerId, picked, onToggle }: { ownerId: string; picked: st
       <legend className="text-sm font-semibold">Cards</legend>
       {tradeable.length === 0 ? (
         <p className="mt-1 text-ink-soft">
-          No cards available to trade. Cards that are listed for sale or already in a trade can&apos;t be added.
+          No cards available to trade. Cards that are listed for sale, already in a trade, or not open to trade can&apos;t be added.
         </p>
       ) : (
         <ul className="mt-1 grid grid-cols-3 gap-2 sm:grid-cols-4">

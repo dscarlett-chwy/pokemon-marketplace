@@ -62,11 +62,11 @@ export function lockedItems(data: Pick<MarketData, "listings" | "offers">) {
   return locked;
 }
 
-/** Cards a collector could put into an offer: owned, not up for sale, and not in a trade. */
+/** Cards a collector could put into an offer: owned, open to trade, not up for sale, and not in a trade. */
 export function tradeableItems(data: Pick<MarketData, "items" | "listings" | "offers">, userId: string) {
   const locked = lockedItems(data);
   return Object.values(data.items).filter(
-    (i) => i.ownerId === userId && !activeListingForItem(data.listings, i.id) && !locked.has(i.id),
+    (i) => i.ownerId === userId && i.openToTrade && !activeListingForItem(data.listings, i.id) && !locked.has(i.id),
   );
 }
 
@@ -190,10 +190,18 @@ export function addCard(m: MarketData, me: string, card: Card, condition: Condit
     {
       ...m,
       cards: { ...m.cards, [card.id]: card },
-      items: { ...m.items, [id]: { id, ownerId: me, cardId: card.id, condition } },
+      items: { ...m.items, [id]: { id, ownerId: me, cardId: card.id, condition, openToTrade: true } },
     },
     id,
   );
+}
+
+/** Cards switched off stay out of new offers, and pending offers that hold them can no longer be accepted. */
+export function setOpenToTrade(m: MarketData, me: string, itemId: string, open: boolean): Outcome {
+  const item = m.items[itemId];
+  if (!item || item.ownerId !== me) return fail(m, "You can only change your own cards.");
+  if (item.openToTrade === open) return done(m, itemId);
+  return done({ ...m, items: { ...m.items, [itemId]: { ...item, openToTrade: open } } }, itemId);
 }
 
 export const MAX_NAME = 40;

@@ -18,6 +18,8 @@ export type OwnedCard = {
   ownerId: string;
   cardId: string;
   condition: Condition;
+  /** Whether other collectors may ask for this card in an offer. On unless the owner switches it off. */
+  openToTrade: boolean;
 };
 
 /** "trading" means an accepted offer is being carried out; the listing reopens if that trade is cancelled. */

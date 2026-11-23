@@ -63,6 +63,7 @@ const SCHEMA = `
   ALTER TABLE listings ENABLE ROW LEVEL SECURITY;
   ALTER TABLE offers ENABLE ROW LEVEL SECURITY;
   ALTER TABLE users ADD COLUMN IF NOT EXISTS handle TEXT;
+  ALTER TABLE items ADD COLUMN IF NOT EXISTS open_to_trade BOOLEAN NOT NULL DEFAULT true;
 `;
 
 /** Runs after SCHEMA and the handle backfill, since existing users need unique handles first. */
@@ -78,7 +79,7 @@ const TABLES: Table[] = ["users", "cards", "items", "listings", "offers"];
 const UPDATABLE: Record<Table, string[]> = {
   users: ["name", "handle"],
   cards: ["data"],
-  items: ["owner_id", "card_id", "condition"],
+  items: ["owner_id", "card_id", "condition", "open_to_trade"],
   listings: ["asking_price", "open_to_trades", "exchange_methods", "area", "note", "status"],
   offers: ["rounds", "status", "closed_reason", "trade", "updated_at"],
 };
@@ -95,6 +96,7 @@ const toParams = {
     owner_id: i.ownerId,
     card_id: i.cardId,
     condition: i.condition,
+    open_to_trade: i.openToTrade,
   }),
   listings: (l: MarketData["listings"][string]): Params => ({
     id: l.id,
@@ -207,6 +209,7 @@ export async function readMarket(sql: Db): Promise<MarketData> {
       ownerId: r.owner_id as string,
       cardId: r.card_id as string,
       condition: r.condition as Condition,
+      openToTrade: r.open_to_trade as boolean,
     };
   }
   for (const r of listings) {

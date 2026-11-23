@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { formatMoney } from "@/lib/format";
 import { useHydrated } from "@/store/hydration";
 import { activeListingForItem, latestTerms, lockedItems, offeredItemIds, useMarketplace, useMe } from "@/store/marketplace";
+import { useNotice } from "@/store/notice";
 import { AddCardPanel } from "./AddCardPanel";
 import { CardImage } from "./CardImage";
 import { ListCardDialog } from "./ListCardDialog";
@@ -18,6 +19,8 @@ export function InventoryView() {
   const cards = useMarketplace((s) => s.cards);
   const listings = useMarketplace((s) => s.listings);
   const offers = useMarketplace((s) => s.offers);
+  const setOpenToTrade = useMarketplace((s) => s.setOpenToTrade);
+  const show = useNotice((s) => s.show);
   const [adding, setAdding] = useState(false);
   const [listingItemId, setListingItemId] = useState<string | null>(null);
 
@@ -38,6 +41,9 @@ export function InventoryView() {
           <h1 className="font-display text-display font-bold">My cards</h1>
           <p className="tabular mt-3 text-lg text-ink-soft">
             {user.name}&apos;s collection, {mine.length === 1 ? "1 card" : `${mine.length} cards`}
+          </p>
+          <p className="mt-1 max-w-xl text-ink-soft">
+            Other collectors can ask for cards marked open to trade in their offers. Switch a card off to keep it out of offers.
           </p>
           <Link
             href="/profile"
@@ -96,15 +102,29 @@ export function InventoryView() {
                         Listed at {formatMoney(listing.askingPrice)}
                       </Link>
                     ) : (
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                        <button
-                          type="button"
-                          onClick={() => setListingItemId(item.id)}
-                          className="rounded-full border border-ink/25 px-3.5 py-1.5 text-sm font-medium text-ink hover:border-ink hover:bg-ink hover:text-paper"
-                        >
-                          List for sale<span className="sr-only">: {card.name}</span>
-                        </button>
-                        {inOffers.has(item.id) && <span className="text-sm text-ink-soft">In an open offer</span>}
+                      <div className="space-y-2">
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                          <button
+                            type="button"
+                            onClick={() => setListingItemId(item.id)}
+                            className="rounded-full border border-ink/25 px-3.5 py-1.5 text-sm font-medium text-ink hover:border-ink hover:bg-ink hover:text-paper"
+                          >
+                            List for sale<span className="sr-only">: {card.name}</span>
+                          </button>
+                          {inOffers.has(item.id) && <span className="text-sm text-ink-soft">In an open offer</span>}
+                        </div>
+                        <label className="flex w-fit cursor-pointer items-center gap-2 text-sm">
+                          <input
+                            type="checkbox"
+                            checked={item.openToTrade}
+                            onChange={(e) => {
+                              const result = setOpenToTrade(item.id, e.target.checked);
+                              if (!result.ok) show(result.error, "error");
+                            }}
+                            className="size-4 accent-accent"
+                          />
+                          Open to trade<span className="sr-only">: {card.name}</span>
+                        </label>
                       </div>
                     )}
                   </div>
